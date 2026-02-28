@@ -97,11 +97,26 @@ export async function signUpWithEmail(email: string, password: string, userData:
 }
 
 export async function signOut(): Promise<void> {
+  // Clear localStorage for demo auth
+  localStorage.removeItem('auth_user');
+  localStorage.removeItem('auth_token');
+  
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
 
 export async function getCurrentUser(): Promise<User | null> {
+  // Check localStorage first for demo password auth
+  const storedUser = localStorage.getItem('auth_user');
+  if (storedUser) {
+    try {
+      return JSON.parse(storedUser);
+    } catch (e) {
+      console.error('Failed to parse stored user:', e);
+    }
+  }
+  
+  // Fallback to Supabase
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user) return null;
@@ -116,6 +131,10 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 export async function isAuthenticated(): Promise<boolean> {
+  // Check localStorage first for demo auth
+  const storedUser = localStorage.getItem('auth_user');
+  if (storedUser) return true;
+  
   const { data: { session } } = await supabase.auth.getSession();
   return !!session;
 }
