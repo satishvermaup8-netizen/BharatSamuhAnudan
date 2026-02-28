@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User } from '@/types';
-import { getCurrentUser, signOut, verifyOTP, sendOTP, signUpWithEmail } from '@/lib/auth';
+import { getCurrentUser, signOut, verifyOTP, signUpWithEmail } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export function useAuth() {
@@ -45,13 +45,9 @@ export function useAuth() {
     };
   }, []);
 
-  const sendLoginOTP = async (mobile: string): Promise<void> => {
-    await sendOTP(mobile);
-  };
-
-  const login = async (mobile: string, otp: string): Promise<boolean> => {
+  const login = async (mobile: string, password: string): Promise<boolean> => {
     try {
-      const loggedInUser = await verifyOTP(mobile, otp);
+      const loggedInUser = await verifyOTP(mobile, password);
       setUser(loggedInUser);
       return true;
     } catch (error: any) {
@@ -83,7 +79,6 @@ export function useAuth() {
     user,
     loading,
     isAuthenticated: !!user,
-    sendLoginOTP,
     login,
     register,
     logout,

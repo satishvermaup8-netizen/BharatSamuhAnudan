@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 import { User } from '@/types';
-import { DEV_MODE, AUTO_OTP } from '@/constants';
 
 // Map Supabase user to our User type
 function mapSupabaseUser(user: any, profile?: any): User {
@@ -17,79 +16,32 @@ function mapSupabaseUser(user: any, profile?: any): User {
   };
 }
 
-export async function sendOTP(mobile: string): Promise<void> {
-  // For OTP authentication via mobile
-  const email = `${mobile}@bharatsamuh.temp`; // Temporary email for OTP flow
-  
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      shouldCreateUser: true,
-    },
-  });
-
-  if (error) throw error;
-}
-
-export async function verifyOTP(mobile: string, otp: string): Promise<User> {
+export async function verifyOTP(mobile: string, password: string): Promise<User> {
+  // Password-based demo authentication (bypassed OTP rate limiting)
   const email = `${mobile}@bharatsamuh.temp`;
   
-  // Development mode: Skip real OTP verification
-  if (DEV_MODE && otp === AUTO_OTP) {
-    console.log('🔓 DEV MODE: Auto-verifying OTP');
-    // In dev mode, directly sign in (bypassing real OTP check)
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { 
-        shouldCreateUser: true,
-        data: { mobile }
-      },
-    });
-
-    if (error) throw error;
-
-    // Return mock user for dev mode
-    const mockUser: User = {
-      id: Date.now().toString(),
-      name: mobile,
-      email,
-      mobile,
-      role: 'member',
-      kycStatus: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    
-    // Store in localStorage for dev mode
-    localStorage.setItem('dev_user', JSON.stringify(mockUser));
-    return mockUser;
+  // Simple password verification for demo
+  const DEMO_PASSWORD = '1234';
+  if (password !== DEMO_PASSWORD) {
+    throw new Error('गलत पासवर्ड। कृपया 1234 दर्ज करें।');
   }
-  
-  // Production mode: Normal OTP verification
-  const { data, error } = await supabase.auth.verifyOtp({
+
+  // Create mock user for password auth
+  const mockUser: User = {
+    id: `user-${mobile}`,
+    name: `User ${mobile}`,
     email,
-    token: otp,
-    type: 'email',
-  });
-
-  if (error) throw error;
-  if (!data.user) throw new Error('Verification failed');
-
-  // Wait for trigger to create profile (small delay)
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  // Get user profile (should exist from trigger)
-  const { data: profile, error: profileError } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('id', data.user.id)
-    .single();
-
-  if (profileError) {
-    console.error('Profile fetch error:', profileError);
-    // If profile doesn't exist, user metadata should still work
-  }
-
-  return mapSupabaseUser(data.user, profile);
+    mobile,
+    role: 'member',
+    kycStatus: 'verified',
+    createdAt: new Date().toISOString(),
+  };
+  
+  // Store in localStorage for demo mode
+  localStorage.setItem('auth_user', JSON.stringify(mockUser));
+  localStorage.setItem('auth_token', `token-${mobile}`);
+  
+  return mockUser;
 }
 
 export async function signInWithEmail(email: string, password: string): Promise<User> {
