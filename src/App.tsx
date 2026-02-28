@@ -85,68 +85,19 @@ function App() {
             <Route path={ROUTES.CREATE_GROUP} element={<CreateGroupPage />} />
             <Route path="/groups/:groupId" element={<GroupDetailPage />} />
             
-            <Route
-              path={ROUTES.DASHBOARD}
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
             
-            <Route
-              path={ROUTES.MY_GROUPS}
-              element={
-                <ProtectedRoute>
-                  <MyGroupsPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path={ROUTES.MY_GROUPS} element={<MyGroupsPage />} />
             
-            <Route
-              path={ROUTES.TRANSACTIONS}
-              element={
-                <ProtectedRoute>
-                  <TransactionsPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path={ROUTES.TRANSACTIONS} element={<TransactionsPage />} />
             
-            <Route
-              path={ROUTES.WALLET}
-              element={
-                <ProtectedRoute>
-                  <WalletPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path={ROUTES.WALLET} element={<WalletPage />} />
             
-            <Route
-              path={ROUTES.PROFILE}
-              element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
             
-            <Route
-              path="/kyc"
-              element={
-                <ProtectedRoute>
-                  <KYCSubmissionPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/kyc" element={<KYCSubmissionPage />} />
             
-            <Route
-              path="/nominees"
-              element={
-                <ProtectedRoute>
-                  <NomineeManagementPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/nominees" element={<NomineeManagementPage />} />
             
             <Route
               path={ROUTES.ADMIN}
