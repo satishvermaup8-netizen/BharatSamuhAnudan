@@ -49,10 +49,13 @@ export function LoginPage() {
     
     try {
       await login(mobile, DEMO_PASSWORD);
-      setSuccess('✓ लॉगिन सफल! डैशबोर्ड पर जा रहे हैं...');
+      // Show success message before redirect
+      setSuccess('✓ लॉगिन सफल! होम पेज पर जा रहे हैं...');
+      
+      // Wait 1 second so user can see the success message
       setTimeout(() => {
-        navigate(ROUTES.DASHBOARD);
-      }, 500);
+        navigate(ROUTES.HOME);
+      }, 1200);
     } catch (error: any) {
       setError(error.message || 'लॉगिन विफल। क्षमा करें, कृपया पुनः प्रयास करें।');
       setLoading(false);
@@ -86,9 +89,12 @@ export function LoginPage() {
 
           {/* Success Alert */}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-green-700">{success}</p>
+            <div className="mb-6 p-4 bg-green-50 border-2 border-green-400 rounded-lg flex items-center space-x-3 animate-pulse">
+              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-base font-semibold text-green-700">{success}</p>
+                <p className="text-xs text-green-600 mt-1">रीडायरेक्ट हो रहा है...</p>
+              </div>
             </div>
           )}
 
