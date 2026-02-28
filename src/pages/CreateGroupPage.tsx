@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, MapPin, FileText, DollarSign } from 'lucide-react';
 import { ROUTES } from '@/constants';
+import { GroupInviteModal } from '@/components/group';
+import { useToast } from '@/hooks/use-toast';
 
 export function CreateGroupPage() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [createdGroup, setCreatedGroup] = useState<{id: string, name: string, code: string} | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -42,10 +47,29 @@ export function CreateGroupPage() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      alert('✓ समूह सफलतापूर्वक बनाया गया!');
-      navigate(ROUTES.GROUPS);
+      // Generate group code
+      const groupCode = `GRP${Date.now().toString(36).toUpperCase()}`;
+      const groupId = `group_${Date.now()}`;
+      
+      setCreatedGroup({
+        id: groupId,
+        name: formData.name,
+        code: groupCode,
+      });
+      
+      toast({
+        title: 'समूह बनाया गया!',
+        description: `✓ ${formData.name} सफलतापूर्वक बनाया गया।`,
+      });
+      
+      // Show invite modal instead of navigating away
+      setShowInviteModal(true);
     } catch (error: any) {
-      alert(error.message || 'समूह बनाने में विफल');
+      toast({
+        title: 'त्रुटि',
+        description: error.message || 'समूह बनाने में विफल',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -238,6 +262,20 @@ export function CreateGroupPage() {
           </div>
         </div>
       </div>
+
+      {/* Group Invite Modal */}
+      {createdGroup && (
+        <GroupInviteModal
+          isOpen={showInviteModal}
+          onClose={() => {
+            setShowInviteModal(false);
+            navigate(ROUTES.GROUPS);
+          }}
+          groupId={createdGroup.id}
+          groupName={createdGroup.name}
+          groupCode={createdGroup.code}
+        />
+      )}
     </div>
   );
 }
