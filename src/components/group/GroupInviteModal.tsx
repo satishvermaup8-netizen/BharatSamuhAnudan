@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Copy, Share2, Mail, MessageCircle, CheckCircle, Users } from 'lucide-react';
+import { X, Copy, Share2, Mail, MessageCircle, CheckCircle, Users, Smartphone, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -18,9 +18,14 @@ export function GroupInviteModal({ isOpen, onClose, groupId, groupName, groupCod
   const { toast } = useToast();
   const [emailInput, setEmailInput] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
+  const [mobileInput, setMobileInput] = useState('');
+  const [userIdInput, setUserIdInput] = useState('');
   const [invitedEmails, setInvitedEmails] = useState<string[]>([]);
   const [invitedPhones, setInvitedPhones] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'link' | 'email' | 'whatsapp'>('link');
+  const [invitedMobiles, setInvitedMobiles] = useState<string[]>([]);
+  const [invitedUserIds, setInvitedUserIds] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'link' | 'email' | 'whatsapp' | 'existing'>('link');
+  const [existingInviteMethod, setExistingInviteMethod] = useState<'mobile' | 'userId'>('mobile');
 
   const inviteLink = `${window.location.origin}/groups/join/${groupCode}`;
   const maxMembers = 1000;
@@ -73,17 +78,52 @@ export function GroupInviteModal({ isOpen, onClose, groupId, groupName, groupCod
     }
   };
 
+  const handleAddMobile = () => {
+    if (mobileInput && !invitedMobiles.includes(mobileInput)) {
+      // Validate 10 digit mobile number
+      if (!/^\d{10}$/.test(mobileInput)) {
+        toast({
+          title: 'त्रुटि',
+          description: 'कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setInvitedMobiles([...invitedMobiles, mobileInput]);
+      setMobileInput('');
+      toast({
+        title: 'मोबाइल नंबर जोड़ा गया',
+        description: `${mobileInput} को आमंत्रण भेजा जाएगा।`,
+      });
+    }
+  };
+
+  const handleAddUserId = () => {
+    if (userIdInput && !invitedUserIds.includes(userIdInput)) {
+      setInvitedUserIds([...invitedUserIds, userIdInput]);
+      setUserIdInput('');
+      toast({
+        title: 'यूजर ID जोड़ा गया',
+        description: `यूजर ID ${userIdInput} को आमंत्रण भेजा जाएगा।`,
+      });
+    }
+  };
+
   const handleSendInvites = async () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
+    const totalInvited = invitedEmails.length + invitedPhones.length + invitedMobiles.length + invitedUserIds.length;
+    
     toast({
       title: 'आमंत्रण भेजे गए!',
-      description: `${invitedEmails.length + invitedPhones.length} सदस्यों को आमंत्रण भेजा गया।`,
+      description: `${totalInvited} सदस्यों को आमंत्रण भेजा गया।`,
     });
     
     setInvitedEmails([]);
     setInvitedPhones([]);
+    setInvitedMobiles([]);
+    setInvitedUserIds([]);
   };
 
   const handleSkip = () => {
@@ -122,12 +162,12 @@ export function GroupInviteModal({ isOpen, onClose, groupId, groupName, groupCod
               <p className="text-sm text-white/80">कोड: {groupCode}</p>
             </div>
             <div className="bg-white/20 rounded-lg px-3 py-2 text-center">
-              <div className="text-2xl font-bold">{invitedEmails.length + invitedPhones.length}</div>
+              <div className="text-2xl font-bold">{invitedEmails.length + invitedPhones.length + invitedMobiles.length + invitedUserIds.length}</div>
               <div className="text-xs text-white/80">आमंत्रित</div>
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between text-sm">
-            <span className="text-white/80">कुल सदस्य: {invitedEmails.length + invitedPhones.length + 1} (आप + आमंत्रित)</span>
+            <span className="text-white/80">कुल सदस्य: {invitedEmails.length + invitedPhones.length + invitedMobiles.length + invitedUserIds.length + 1} (आप + आमंत्रित)</span>
             <span className="text-white/80">अधिकतम: {maxMembers}</span>
           </div>
         </div>
@@ -160,6 +200,15 @@ export function GroupInviteModal({ isOpen, onClose, groupId, groupName, groupCod
           >
             <MessageCircle className="w-4 h-4" />
             WhatsApp
+          </button>
+          <button
+            onClick={() => setActiveTab('existing')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'existing' ? 'bg-white text-trust shadow-sm' : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <UserCircle className="w-4 h-4" />
+            मौजूदा उपयोगकर्ता
           </button>
         </div>
 
@@ -280,6 +329,124 @@ export function GroupInviteModal({ isOpen, onClose, groupId, groupName, groupCod
                 {invitedPhones.length} WhatsApp भेजें
               </Button>
             )}
+          </div>
+        )}
+
+        {/* Existing Users Tab */}
+        {activeTab === 'existing' && (
+          <div className="space-y-4">
+            {/* Method Selection */}
+            <div className="flex space-x-1 rounded-lg bg-gray-100 p-1">
+              <button
+                onClick={() => setExistingInviteMethod('mobile')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  existingInviteMethod === 'mobile' ? 'bg-white text-trust shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Smartphone className="w-4 h-4" />
+                मोबाइल नंबर
+              </button>
+              <button
+                onClick={() => setExistingInviteMethod('userId')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  existingInviteMethod === 'userId' ? 'bg-white text-trust shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <UserCircle className="w-4 h-4" />
+                यूजर ID
+              </button>
+            </div>
+
+            {/* Mobile Number Input */}
+            {existingInviteMethod === 'mobile' && (
+              <>
+                <div className="flex gap-2">
+                  <Input
+                    type="tel"
+                    placeholder="10 अंकों का मोबाइल नंबर दर्ज करें"
+                    value={mobileInput}
+                    onChange={(e) => setMobileInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddMobile()}
+                    maxLength={10}
+                  />
+                  <Button onClick={handleAddMobile} variant="outline">
+                    जोड़ें
+                  </Button>
+                </div>
+                {invitedMobiles.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">आमंत्रित मोबाइल:</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {invitedMobiles.map((mobile, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800"
+                        >
+                          {mobile}
+                          <button
+                            onClick={() => setInvitedMobiles(invitedMobiles.filter((_, i) => i !== index))}
+                            className="ml-2 hover:text-purple-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* User ID Input */}
+            {existingInviteMethod === 'userId' && (
+              <>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="यूजर ID दर्ज करें"
+                    value={userIdInput}
+                    onChange={(e) => setUserIdInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddUserId()}
+                  />
+                  <Button onClick={handleAddUserId} variant="outline">
+                    जोड़ें
+                  </Button>
+                </div>
+                {invitedUserIds.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">आमंत्रित यूजर ID:</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {invitedUserIds.map((userId, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-orange-100 text-orange-800"
+                        >
+                          {userId}
+                          <button
+                            onClick={() => setInvitedUserIds(invitedUserIds.filter((_, i) => i !== index))}
+                            className="ml-2 hover:text-orange-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Send Button */}
+            {(invitedMobiles.length > 0 || invitedUserIds.length > 0) && (
+              <Button onClick={handleSendInvites} className="w-full bg-purple-600 hover:bg-purple-700">
+                <UserCircle className="w-4 h-4 mr-2" />
+                {invitedMobiles.length + invitedUserIds.length} आमंत्रण भेजें
+              </Button>
+            )}
+
+            <p className="text-xs text-gray-500">
+              मौजूदा उपयोगकर्ताओं को सीधे उनके मोबाइल नंबर या यूजर ID से आमंत्रित करें। उन्हें एक नोटिफिकेशन भेजा जाएगा।
+            </p>
           </div>
         )}
 

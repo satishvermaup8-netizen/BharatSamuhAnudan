@@ -804,3 +804,135 @@ async function splitPaymentToWallets(transactionId: string) {
 
   console.log('Payment split completed:', split);
 }
+
+// =====================================================
+// INVITATIONS
+// =====================================================
+
+export interface CreateInvitationData {
+  groupId: string;
+  inviteMethod: 'mobile' | 'user_id' | 'email';
+  inviteValue: string;
+  message?: string;
+}
+
+export interface Invitation {
+  id: string;
+  groupId: string;
+  groupName: string;
+  invitedBy: string;
+  invitedByName: string;
+  inviteMethod: string;
+  inviteValue: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  createdAt: string;
+  expiresAt: string;
+}
+
+export async function createInvitation(data: CreateInvitationData): Promise<Invitation> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication required. Please log in again.');
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/invitations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+      credentials: 'include',
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorMessage = `Failed to send invitation (${response.status})`;
+      try {
+        const errorJson = await response.json();
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // Use default error message
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw error;
+  }
+}
+
+export async function getMyInvitations(): Promise<Invitation[]> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication required. Please log in again.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/invitations/my-invitations`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch invitations');
+  }
+
+  return response.json();
+}
+
+export async function respondToInvitation(invitationId: string, response: 'accept' | 'reject'): Promise<Invitation> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication required. Please log in again.');
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/invitations/respond`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ invitationId, response }),
+      signal: controller.signal,
+      credentials: 'include',
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      let errorMessage = `Failed to respond to invitation (${res.status})`;
+      try {
+        const errorJson = await res.json();
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // Use default error message
+      }
+      throw new Error(errorMessage);
+    }
+
+    return res.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw error;
+  }
+}

@@ -16,6 +16,7 @@ import { ClaimsModule } from './claims/claims.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { CommonModule } from './common/common.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { InvitationsModule } from './invitations/invitations.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { UploadsModule } from './uploads/uploads.module';
     ClaimsModule,
     AnalyticsModule,
     UploadsModule,
+    InvitationsModule,
   ],
   providers: [
     {
