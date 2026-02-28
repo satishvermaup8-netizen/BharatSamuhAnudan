@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus } from 'lucide-react';
 import { GroupCard } from '@/components/features/GroupCard';
 import { mockGroups } from '@/lib/mockData';
+import { ROUTES } from '@/constants';
 
 export function GroupsPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
@@ -61,7 +64,10 @@ export function GroupsPage() {
             </div>
 
             {/* Create Group Button */}
-            <button className="btn-primary flex items-center justify-center space-x-2 whitespace-nowrap">
+            <button 
+              onClick={() => navigate(ROUTES.CREATE_GROUP)}
+              className="btn-primary flex items-center justify-center space-x-2 whitespace-nowrap"
+            >
               <Plus className="w-5 h-5" />
               <span>नया समूह बनाएं</span>
             </button>

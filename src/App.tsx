@@ -8,6 +8,7 @@ import { LoginPage } from '@/pages/LoginPage';
 import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { GroupsPage } from '@/pages/GroupsPage';
+import { CreateGroupPage } from '@/pages/CreateGroupPage';
 import { AdminDashboardPage } from '@/pages/AdminDashboardPage';
 import { AdminKYCPage } from '@/pages/AdminKYCPage';
 import { AdminGroupsPage } from '@/pages/AdminGroupsPage';
@@ -67,6 +68,14 @@ function App() {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
             <Route path={ROUTES.GROUPS} element={<GroupsPage />} />
+            <Route
+              path={ROUTES.CREATE_GROUP}
+              element={
+                <ProtectedRoute>
+                  <CreateGroupPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/groups/:groupId" element={<GroupDetailPage />} />
             
             <Route

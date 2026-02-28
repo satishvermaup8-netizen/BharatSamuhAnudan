@@ -54,6 +54,7 @@ export const ROUTES = {
   REGISTER: '/register',
   DASHBOARD: '/dashboard',
   GROUPS: '/groups',
+  CREATE_GROUP: '/groups/create',
   MY_GROUPS: '/my-groups',
   TRANSACTIONS: '/transactions',
   WALLET: '/wallet',
