@@ -161,10 +161,10 @@ export function HomePage() {
   ];
 
   const impactStats = [
-    { label: 'बच्चों को शिक्षित किया', value: 50000 },
-    { label: 'गाँव जुड़े हुए', value: 500 },
-    { label: 'परिवार सशक्त किए', value: 100000 },
-    { label: 'छात्रवृत्ति दी गई', value: 10000 },
+    { label: 'कुल दान प्राप्त', value: 14500000, icon: '💰', unit: '₹' },
+    { label: 'सक्रिय सदस्य', value: 45000, icon: '👥' },
+    { label: 'समूह बनाएं गए', value: 500, icon: '🤝' },
+    { label: 'परिवार सशक्त किए', value: 100000, icon: '👨‍👩‍👧‍👦' },
   ];
 
   return (
@@ -310,6 +310,8 @@ export function HomePage() {
               key={index}
               label={stat.label}
               value={stat.value}
+              icon={stat.icon}
+              unit={stat.unit}
               isVisible={impactVisible}
               delay={index * 100}
             />
@@ -569,9 +571,11 @@ interface ImpactCounterProps {
   value: number;
   isVisible: boolean;
   delay: number;
+  icon?: string;
+  unit?: string;
 }
 
-function ImpactCounter({ label, value, isVisible, delay }: ImpactCounterProps) {
+function ImpactCounter({ label, value, isVisible, delay, icon, unit }: ImpactCounterProps) {
   const animatedValue = useAnimatedCounter(
     isVisible ? value : 0,
     2000
@@ -584,11 +588,15 @@ function ImpactCounter({ label, value, isVisible, delay }: ImpactCounterProps) {
       }`}
       style={{ transitionDelay: `${delay}ms` }}
     >
-      <div className="bg-white p-8 rounded-2xl shadow-lg border border-ngo-gray-100 h-full">
-        <p className="text-5xl md:text-6xl font-bold text-soft-blue-700 mb-4">
-          {animatedValue.toLocaleString('en-IN')}+
-        </p>
-        <p className="text-lg text-ngo-gray-700 font-semibold">{label}</p>
+      <div className="bg-white p-8 rounded-2xl shadow-lg border border-ngo-gray-100 h-full flex flex-col items-center justify-center">
+        {icon && <span className="text-5xl mb-3">{icon}</span>}
+        <div className="flex items-baseline justify-center gap-1">
+          {unit && <span className="text-3xl text-soft-blue-600 font-bold">{unit}</span>}
+          <p className="text-5xl md:text-6xl font-bold text-soft-blue-700">
+            {animatedValue.toLocaleString('en-IN')}
+          </p>
+        </div>
+        <p className="text-lg text-ngo-gray-700 font-semibold mt-4">{label}</p>
       </div>
     </div>
   );
