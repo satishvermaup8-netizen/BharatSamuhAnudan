@@ -17,6 +17,11 @@ import { AdminAuditPage } from '@/pages/AdminAuditPage';
 import { GroupDetailPage } from '@/pages/GroupDetailPage';
 import { KYCSubmissionPage } from '@/pages/KYCSubmissionPage';
 import { NomineeManagementPage } from '@/pages/NomineeManagementPage';
+import { MyGroupsPage } from '@/pages/MyGroupsPage';
+import { TransactionsPage } from '@/pages/TransactionsPage';
+import { WalletPage } from '@/pages/WalletPage';
+import { ProfilePage } from '@/pages/ProfilePage';
+import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/hooks/useAuth';
 import { isAdmin } from '@/lib/auth';
 import { ROUTES } from '@/constants';
@@ -69,6 +74,42 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path={ROUTES.MY_GROUPS}
+              element={
+                <ProtectedRoute>
+                  <MyGroupsPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path={ROUTES.TRANSACTIONS}
+              element={
+                <ProtectedRoute>
+                  <TransactionsPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path={ROUTES.WALLET}
+              element={
+                <ProtectedRoute>
+                  <WalletPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path={ROUTES.PROFILE}
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
                 </ProtectedRoute>
               }
             />
@@ -151,20 +192,6 @@ function App() {
         <Footer />
       </div>
     </BrowserRouter>
-  );
-}
-
-function NotFound() {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-9xl font-bold text-trust">404</h1>
-        <p className="text-2xl text-gray-600 mb-8">पेज नहीं मिला</p>
-        <a href={ROUTES.HOME} className="btn-primary inline-block">
-          होम पर जाएं
-        </a>
-      </div>
-    </div>
   );
 }
 
