@@ -73,6 +73,57 @@ export async function submitKYC(kycData: {
   return data;
 }
 
+// Get KYC documents
+export async function getKYCDocuments(userId: string) {
+  const { data, error } = await supabase
+    .from('kyc_documents')
+    .select('*')
+    .eq('user_id', userId)
+    .order('uploaded_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+// Upload KYC document
+export async function uploadKYCDocument(
+  userId: string,
+  documentType: string,
+  file: File
+) {
+  // Upload to storage
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${userId}/${documentType}_${Date.now()}.${fileExt}`;
+  
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from('kyc-documents')
+    .upload(fileName, file);
+
+  if (uploadError) throw uploadError;
+
+  // Get public URL
+  const { data: { publicUrl } } = supabase.storage
+    .from('kyc-documents')
+    .getPublicUrl(fileName);
+
+  // Create document record
+  const { data, error } = await supabase
+    .from('kyc_documents')
+    .insert({
+      user_id: userId,
+      document_type: documentType,
+      file_name: file.name,
+      file_url: publicUrl,
+      file_size: file.size,
+      upload_status: 'uploaded',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
 // =====================================================
 // GROUPS
 // =====================================================
@@ -115,6 +166,30 @@ export async function getGroup(groupId: string) {
 
   if (error) throw error;
   return data;
+}
+
+export async function getGroupMembers(groupId: string) {
+  const { data, error } = await supabase
+    .from('group_members')
+    .select(`
+      *,
+      user:user_profiles(id, username, email)
+    `)
+    .eq('group_id', groupId)
+    .order('joined_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getGroupRoles(groupId: string) {
+  const { data, error } = await supabase
+    .from('group_roles')
+    .select('*, user:user_profiles(*)')
+    .eq('group_id', groupId);
+
+  if (error) throw error;
+  return data || [];
 }
 
 export async function createGroup(groupData: {
@@ -195,7 +270,7 @@ export async function getUserWallets(userId: string) {
     .eq('user_id', userId);
 
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
 export async function getGroupWallet(groupId: string) {
@@ -337,31 +412,47 @@ export async function markInstallmentPaid(installmentId: string, transactionId: 
 // NOMINEES
 // =====================================================
 
-export async function getUserNominees(userId: string) {
+export async function getNominees(userId: string) {
   const { data, error } = await supabase
     .from('nominees')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false});
 
   if (error) throw error;
-  return data;
+  return data || [];
 }
 
-export async function createNominee(nomineeData: Partial<Nominee>) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
+export async function createNominee(nomineeData: any) {
   const { data, error } = await supabase
     .from('nominees')
-    .insert({
-      ...nomineeData,
-      user_id: user.id,
-    })
+    .insert(nomineeData)
     .select()
     .single();
 
   if (error) throw error;
   return data;
+}
+
+export async function updateNominee(nomineeId: string, nomineeData: any) {
+  const { data, error } = await supabase
+    .from('nominees')
+    .update(nomineeData)
+    .eq('id', nomineeId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteNominee(nomineeId: string) {
+  const { error } = await supabase
+    .from('nominees')
+    .delete()
+    .eq('id', nomineeId);
+
+  if (error) throw error;
 }
 
 // =====================================================

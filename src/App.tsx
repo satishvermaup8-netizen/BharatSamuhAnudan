@@ -14,6 +14,9 @@ import { AdminGroupsPage } from '@/pages/AdminGroupsPage';
 import { AdminClaimsPage } from '@/pages/AdminClaimsPage';
 import { AdminUsersPage } from '@/pages/AdminUsersPage';
 import { AdminAuditPage } from '@/pages/AdminAuditPage';
+import { GroupDetailPage } from '@/pages/GroupDetailPage';
+import { KYCSubmissionPage } from '@/pages/KYCSubmissionPage';
+import { NomineeManagementPage } from '@/pages/NomineeManagementPage';
 import { useAuth } from '@/hooks/useAuth';
 import { isAdmin } from '@/lib/auth';
 import { ROUTES } from '@/constants';
@@ -59,12 +62,31 @@ function App() {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
             <Route path={ROUTES.GROUPS} element={<GroupsPage />} />
+            <Route path="/groups/:groupId" element={<GroupDetailPage />} />
             
             <Route
               path={ROUTES.DASHBOARD}
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/kyc"
+              element={
+                <ProtectedRoute>
+                  <KYCSubmissionPage />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/nominees"
+              element={
+                <ProtectedRoute>
+                  <NomineeManagementPage />
                 </ProtectedRoute>
               }
             />
