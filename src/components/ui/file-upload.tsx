@@ -32,6 +32,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [progress, setProgress] = useState<number[]>([]);
+  // Use Map for stable object URL lookups by file identifier
+  const [objectUrlMap, setObjectUrlMap] = useState<Map<string, string>>(new Map());
+
+  // Helper to generate unique file identifier
+  const getFileId = (file: File): string => `${file.name}-${file.size}-${file.lastModified}`;
 
   const handleFiles = (selectedFiles: FileList | File[]) => {
     const fileArr = Array.from(selectedFiles);
@@ -46,7 +51,17 @@ export const FileUpload: React.FC<FileUploadProps> = ({
       }
     });
     setErrors(newErrors);
+    // Revoke old object URLs before setting new files
+    objectUrlMap.forEach(url => URL.revokeObjectURL(url));
     setFiles(validFiles);
+    // Create new object URLs for image previews with stable keys
+    const newUrlMap = new Map<string, string>();
+    validFiles
+      .filter(f => f.type.startsWith('image/'))
+      .forEach(f => {
+        newUrlMap.set(getFileId(f), URL.createObjectURL(f));
+      });
+    setObjectUrlMap(newUrlMap);
     setProgress(validFiles.map(() => 0));
     if (onFilesChange) onFilesChange(validFiles);
   };
@@ -84,6 +99,19 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     return () => intervals.forEach(clearInterval);
   }, [files]);
 
+  // Use ref to track current object URLs for cleanup on unmount
+  const objectUrlsRef = React.useRef<Map<string, string>>(new Map());
+  React.useEffect(() => {
+    objectUrlsRef.current = objectUrlMap;
+  }, [objectUrlMap]);
+
+  // Cleanup object URLs when component unmounts only
+  React.useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
+
   return (
     <div className="w-full max-w-md mx-auto">
       <label className="block mb-2 text-sm font-medium text-gray-700">{label}</label>
@@ -116,7 +144,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             <div key={file.name} className="flex items-center space-x-4">
               {file.type.startsWith('image/') ? (
                 <img
-                  src={URL.createObjectURL(file)}
+                  src={objectUrlMap.get(getFileId(file))}
                   alt={file.name}
                   className="w-16 h-16 object-cover rounded"
                 />

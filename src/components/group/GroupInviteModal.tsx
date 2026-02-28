@@ -114,6 +114,24 @@ export function GroupInviteModal({ isOpen, onClose, groupId, groupName, groupCod
           </p>
         </div>
 
+        {/* Live Group Preview Card */}
+        <div className="bg-gradient-to-br from-trust-light to-trust rounded-xl p-4 mb-4 text-white shadow-md">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold mb-1">{groupName}</h3>
+              <p className="text-sm text-white/80">कोड: {groupCode}</p>
+            </div>
+            <div className="bg-white/20 rounded-lg px-3 py-2 text-center">
+              <div className="text-2xl font-bold">{invitedEmails.length + invitedPhones.length}</div>
+              <div className="text-xs text-white/80">आमंत्रित</div>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between text-sm">
+            <span className="text-white/80">कुल सदस्य: {invitedEmails.length + invitedPhones.length + 1} (आप + आमंत्रित)</span>
+            <span className="text-white/80">अधिकतम: {maxMembers}</span>
+          </div>
+        </div>
+
         {/* Tab Navigation */}
         <div className="flex space-x-1 rounded-lg bg-gray-100 p-1 mb-4">
           <button

@@ -1,13 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, MapPin, FileText, DollarSign } from 'lucide-react';
+import { ArrowLeft, Users, MapPin, FileText, DollarSign, Crown } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { GroupInviteModal } from '@/components/group';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { User } from '@/types';
+
+// Mock users for leader selection (in production, fetch from API)
+const MOCK_USERS: User[] = [
+  { id: 'user_1', name: 'राजेश कुमार', email: 'rajesh@example.com', mobile: '9876543210', role: 'super_admin', kycStatus: 'verified', createdAt: new Date().toISOString() },
+  { id: 'user_2', name: 'प्रिया शर्मा', email: 'priya@example.com', mobile: '9876543211', role: 'group_admin', kycStatus: 'verified', createdAt: new Date().toISOString() },
+  { id: 'user_3', name: 'अमित पटेल', email: 'amit@example.com', mobile: '9876543212', role: 'group_admin', kycStatus: 'verified', createdAt: new Date().toISOString() },
+];
 
 export function CreateGroupPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [createdGroup, setCreatedGroup] = useState<{id: string, name: string, code: string} | null>(null);
@@ -18,7 +28,15 @@ export function CreateGroupPage() {
     monthlyContribution: '',
     maxMembers: '20',
     groupType: 'savings', // savings, emergency, business
+    leaderId: currentUser?.id || '',
   });
+
+  // Update leaderId when currentUser loads
+  useEffect(() => {
+    if (currentUser && !formData.leaderId) {
+      setFormData(prev => ({ ...prev, leaderId: currentUser.id }));
+    }
+  }, [currentUser]);
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -198,21 +216,60 @@ export function CreateGroupPage() {
                 <span>सदस्य विवरण</span>
               </h2>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  अधिकतम सदस्य संख्या
-                </label>
-                <select
-                  value={formData.maxMembers}
-                  onChange={(e) => handleChange('maxMembers', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trust"
-                >
-                  <option value="10">10 सदस्य</option>
-                  <option value="15">15 सदस्य</option>
-                  <option value="20">20 सदस्य</option>
-                  <option value="30">30 सदस्य</option>
-                  <option value="50">50 सदस्य</option>
-                </select>
+              <div className="space-y-4">
+                {/* Group Leader Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center space-x-2">
+                    <Crown className="w-4 h-4" />
+                    <span>समूह नेता *</span>
+                  </label>
+                  {currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'group_admin') ? (
+                    <select
+                      value={formData.leaderId}
+                      onChange={(e) => handleChange('leaderId', e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trust"
+                    >
+                      {/* Current user first */}
+                      <option value={currentUser.id}>
+                        {currentUser.name} (आप) - {currentUser.role === 'super_admin' ? 'सुपर एडमिन' : 'समूह एडमिन'}
+                      </option>
+                      {/* Other eligible leaders */}
+                      {MOCK_USERS.filter(u => u.id !== currentUser.id).map(user => (
+                        <option key={user.id} value={user.id}>
+                          {user.name} - {user.role === 'super_admin' ? 'सुपर एडमिन' : 'समूह एडमिन'}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 flex items-center justify-between">
+                      <span>{currentUser?.name || 'वर्तमान उपयोगकर्ता'}</span>
+                      <span className="text-xs bg-trust-light text-white px-2 py-1 rounded">नेता</span>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    {currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'group_admin')
+                      ? 'आपके पास नेता नियुक्त करने का अधिकार है'
+                      : 'केवल एडमिन ही नेता बदल सकते हैं'}
+                  </p>
+                </div>
+
+                {/* Max Members */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    अधिकतम सदस्य संख्या
+                  </label>
+                  <select
+                    value={formData.maxMembers}
+                    onChange={(e) => handleChange('maxMembers', e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-trust"
+                  >
+                    <option value="10">10 सदस्य</option>
+                    <option value="15">15 सदस्य</option>
+                    <option value="20">20 सदस्य</option>
+                    <option value="30">30 सदस्य</option>
+                    <option value="50">50 सदस्य</option>
+                  </select>
+                </div>
               </div>
             </div>
 

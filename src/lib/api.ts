@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { getAuthToken } from './auth';
 import { User, Group, Transaction, Wallet, Installment, DeathClaim, AdminApproval, Nominee } from '@/types';
 
 // =====================================================
@@ -122,6 +123,80 @@ export async function uploadKYCDocument(
 
   if (error) throw error;
   return data;
+}
+
+// API Base URL configuration from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
+export interface S3UploadResult {
+  success: boolean;
+  message: string;
+  data: {
+    url: string;
+    key: string;
+    documentType: string;
+  };
+}
+
+// Upload KYC document to AWS S3 via backend
+export async function uploadToS3(
+  documentType: string,
+  file: File
+): Promise<S3UploadResult> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication required. Please log in again.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('documentType', documentType);
+
+  // Create abort controller for timeout (30 seconds)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/uploads/kyc`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      signal: controller.signal,
+      credentials: 'include', // Include cookies for cross-origin requests if needed
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorMessage = `Upload failed (${response.status})`;
+      try {
+        const errorText = await response.text();
+        if (errorText) {
+          try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.message || errorText;
+          } catch {
+            // Use text response if not valid JSON
+            errorMessage = errorText;
+          }
+        }
+      } catch {
+        // If reading the response fails, use status-based message
+        errorMessage = `Upload failed with status ${response.status}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Upload timed out. Please try again.');
+    }
+    throw error;
+  }
 }
 
 // =====================================================

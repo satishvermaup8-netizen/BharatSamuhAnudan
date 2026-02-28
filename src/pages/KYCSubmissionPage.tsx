@@ -1,13 +1,29 @@
 import { useState, useEffect } from 'react';
 import { FileCheck, Upload, CheckCircle, AlertCircle } from 'lucide-react';
-import { submitKYC, getKYCDocuments, uploadKYCDocument } from '@/lib/api';
+import { submitKYC, getKYCDocuments, uploadKYCDocument, uploadToS3 } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { FileUpload } from '@/components/ui/file-upload';
+import { useToast } from '@/components/ui/use-toast';
 
 export function KYCSubmissionPage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState<any[]>([]);
-  const [formData, setFormData] = useState({
+  const [uploadStatus, setUploadStatus] = useState<Record<string, 'idle' | 'uploading' | 'success' | 'error'>>({});
+  const [formData, setFormData] = useState<{
+    aadhaarNumber: string;
+    panNumber: string;
+    bankAccountNumber: string;
+    bankIfsc: string;
+    bankAccountHolder: string;
+    address: string;
+    city: string;
+    state: string;
+    pincode: string;
+    aadhaar_frontKey?: string;
+    aadhaar_backKey?: string;
+  }>({
     aadhaarNumber: '',
     panNumber: '',
     bankAccountNumber: '',
@@ -17,6 +33,8 @@ export function KYCSubmissionPage() {
     city: '',
     state: '',
     pincode: '',
+    aadhaar_frontKey: '',
+    aadhaar_backKey: '',
   });
   const [files, setFiles] = useState<Record<string, File | null>>({
     aadhaar_front: null,
@@ -54,15 +72,39 @@ export function KYCSubmissionPage() {
     if (!file || !user) return;
 
     setLoading(true);
+    setUploadStatus(prev => ({ ...prev, [type]: 'uploading' }));
     try {
-      await uploadKYCDocument(user.id, type, file);
-      alert(`${type} सफलतापूर्वक अपलोड किया गया`);
-      setFiles({ ...files, [type]: null });
+      // Use S3 upload for aadhaar documents
+      if (type === 'aadhaar_front' || type === 'aadhaar_back') {
+        const result = await uploadToS3(type, file);
+        toast({
+          title: 'Upload Successful',
+          description: `${type} सफलतापूर्वक अपलोड किया गया (S3)`,
+        });
+        // Batch state updates for consistency
+        const keyField = type === 'aadhaar_front' ? 'aadhaar_frontKey' : 'aadhaar_backKey';
+        setFormData(prev => ({ ...prev, [keyField]: result.data.key }));
+        setUploadStatus(prev => ({ ...prev, [type]: 'success' }));
+      } else {
+        await uploadKYCDocument(user.id, type, file);
+        toast({
+          title: 'Upload Successful',
+          description: `${type} सफलतापूर्वक अपलोड किया गया`,
+        });
+        setUploadStatus(prev => ({ ...prev, [type]: 'success' }));
+      }
+      setFiles(prev => ({ ...prev, [type]: null }));
       await loadDocuments();
     } catch (error: any) {
-      alert(`अपलोड विफल: ${error.message}`);
+      setUploadStatus(prev => ({ ...prev, [type]: 'error' }));
+      toast({
+        title: 'Upload Failed',
+        description: `अपलोड विफल: ${error.message}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -243,11 +285,11 @@ export function KYCSubmissionPage() {
 
             <div className="space-y-4">
               {[
-                { key: 'aadhaar_front', label: 'आधार कार्ड (सामने)' },
-                { key: 'aadhaar_back', label: 'आधार कार्ड (पीछे)' },
-                { key: 'pan_card', label: 'पैन कार्ड' },
-                { key: 'bank_statement', label: 'बैंक स्टेटमेंट' },
-                { key: 'photo', label: 'पासपोर्ट फोटो' },
+                { key: 'aadhaar_front', label: 'आधार कार्ड (सामने)', useFileUpload: true },
+                { key: 'aadhaar_back', label: 'आधार कार्ड (पीछे)', useFileUpload: true },
+                { key: 'pan_card', label: 'पैन कार्ड', useFileUpload: false },
+                { key: 'bank_statement', label: 'बैंक स्टेटमेंट', useFileUpload: false },
+                { key: 'photo', label: 'पासपोर्ट फोटो', useFileUpload: false },
               ].map((doc) => {
                 const status = getDocumentStatus(doc.key);
                 return (
@@ -265,12 +307,36 @@ export function KYCSubmissionPage() {
                       )}
                     </div>
                     <div className="flex items-center space-x-3">
-                      <input
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={(e) => handleFileChange(doc.key, e.target.files?.[0] || null)}
-                        className="flex-1 text-sm"
-                      />
+                      {doc.useFileUpload ? (
+                        <div className="flex-1">
+                          <FileUpload
+                            label=""
+                            accept="image/jpeg,image/png,image/jpg,application/pdf"
+                            maxSizeMB={5}
+                            onFilesChange={(selectedFiles) => {
+                              if (selectedFiles.length > 0) {
+                                handleFileChange(doc.key, selectedFiles[0]);
+                              }
+                            }}
+                            validate={(file) => {
+                              if (file.size > 5 * 1024 * 1024) {
+                                return 'File size exceeds 5MB limit';
+                              }
+                              if (!['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'].includes(file.type)) {
+                                return 'Only JPEG, PNG images and PDF files are allowed';
+                              }
+                              return null;
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={(e) => handleFileChange(doc.key, e.target.files?.[0] || null)}
+                          className="flex-1 text-sm"
+                        />
+                      )}
                       <button
                         type="button"
                         onClick={() => handleFileUpload(doc.key)}
@@ -281,6 +347,24 @@ export function KYCSubmissionPage() {
                         <span>अपलोड</span>
                       </button>
                     </div>
+                    {(doc.key === 'aadhaar_front' ? formData.aadhaar_frontKey : doc.key === 'aadhaar_back' ? formData.aadhaar_backKey : undefined) && uploadStatus[doc.key] === 'success' && (
+                      <div className="mt-2 text-sm text-green-600 flex items-center space-x-1">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>Uploaded to cloud storage</span>
+                      </div>
+                    )}
+                    {uploadStatus[doc.key] === 'uploading' && (
+                      <div className="mt-2 text-sm text-blue-600 flex items-center space-x-1">
+                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Uploading...</span>
+                      </div>
+                    )}
+                    {uploadStatus[doc.key] === 'error' && (
+                      <div className="mt-2 text-sm text-red-600 flex items-center space-x-1">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Upload failed. Please try again.</span>
+                      </div>
+                    )}
                   </div>
                 );
               })}

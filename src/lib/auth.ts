@@ -41,8 +41,11 @@ function mapSupabaseUser(user: any, profile?: any): User {
   };
 }
 
+// API Base URL configuration from environment
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export async function verifyOTP(mobile: string, password: string): Promise<User> {
-  // Password-based demo authentication
+  // Password-based demo authentication with backend JWT
   const email = `${mobile}@bharatsamuh.temp`;
   
   console.log('🔍 Verifying OTP/Password for mobile:', mobile);
@@ -53,6 +56,7 @@ export async function verifyOTP(mobile: string, password: string): Promise<User>
   const storedUserData = registry[userKey];
   
   let mockUser: User;
+  let loginPassword: string;
   
   if (storedUserData) {
     console.log('✅ User found in registry');
@@ -61,6 +65,7 @@ export async function verifyOTP(mobile: string, password: string): Promise<User>
       throw new Error('गलत पासवर्ड।');
     }
     mockUser = storedUserData.user;
+    loginPassword = storedUserData.password;
   } else {
     console.log('👤 New user login - using demo password');
     // New user login - only accept demo password
@@ -79,11 +84,61 @@ export async function verifyOTP(mobile: string, password: string): Promise<User>
       kycStatus: 'verified',
       createdAt: new Date().toISOString(),
     };
+    loginPassword = DEMO_PASSWORD;
   }
+  
+  // Helper to generate a random mock token
+  // Note: Mock tokens are for local development only and will NOT work with backend APIs
+  const generateMockToken = () => {
+    const timestamp = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).substring(2, 10);
+    return `mock-local-${timestamp}-${randomPart}`;
+  };
+
+  // Storage key for tracking mock auth status
+  const MOCK_AUTH_KEY = 'bharat_mock_auth';
+
+  // Authenticate with backend to get real JWT token
+  let token: string;
+  let isMockToken = false;
+  const allowMockFallback = import.meta.env.VITE_ALLOW_MOCK_AUTH === 'true';
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: loginPassword }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Backend login failed:', response.status, errorText);
+      if (!allowMockFallback) {
+        throw new Error(`Authentication service unavailable. Please try again later.`);
+      }
+      console.warn('⚠️  FALLBACK: Using mock token (S3 uploads disabled)');
+      token = generateMockToken();
+      isMockToken = true;
+    } else {
+      const { access_token } = await response.json();
+      token = access_token;
+      isMockToken = false;
+      console.log('✅ JWT token obtained from backend');
+    }
+  } catch (error) {
+    console.error('❌ Backend connection error:', error);
+    if (!allowMockFallback) {
+      throw new Error('Authentication service unavailable. Please check your connection and try again.');
+    }
+    console.warn('⚠️  FALLBACK: Using mock token due to backend unavailability (S3 uploads disabled)');
+    token = generateMockToken();
+    isMockToken = true;
+  }
+  localStorage.setItem(CURRENT_TOKEN_KEY, token);
+  localStorage.setItem(MOCK_AUTH_KEY, isMockToken ? 'true' : 'false');
   
   // Set as current user
   localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mockUser));
-  localStorage.setItem(CURRENT_TOKEN_KEY, `token-${mobile}`);
   console.log('✅ User logged in:', mobile);
   
   return mockUser;
@@ -155,6 +210,7 @@ export async function signOut(): Promise<void> {
   // Clear only the current user session, not all user data
   localStorage.removeItem(CURRENT_USER_KEY);
   localStorage.removeItem(CURRENT_TOKEN_KEY);
+  localStorage.removeItem('bharat_mock_auth');
   
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
@@ -194,6 +250,19 @@ export async function getCurrentUser(): Promise<User | null> {
     .single();
 
   return mapSupabaseUser(user, profile);
+}
+
+export function getAuthToken(): string | null {
+  return localStorage.getItem(CURRENT_TOKEN_KEY);
+}
+
+/**
+ * Check if the current authentication is using a mock token.
+ * Mock tokens are generated when the backend is unavailable and VITE_ALLOW_MOCK_AUTH is true.
+ * Note: Mock tokens cannot be used for backend API calls like S3 uploads.
+ */
+export function isMockAuth(): boolean {
+  return localStorage.getItem('bharat_mock_auth') === 'true';
 }
 
 export async function isAuthenticated(): Promise<boolean> {
