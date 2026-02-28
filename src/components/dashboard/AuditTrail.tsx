@@ -28,9 +28,9 @@ export function AuditTrail({ entries, onExport }: AuditTrailProps) {
     let result = entries.filter(entry => {
       // Search filter
       const matchesSearch =
-        entry.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        entry.resourceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        entry.initiatedBy.toLowerCase().includes(searchTerm.toLowerCase());
+        entry.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.resourceId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.initiatedBy?.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Status filter
       const matchesStatus = filterStatus === 'all' || entry.status === filterStatus;

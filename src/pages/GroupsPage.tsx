@@ -14,9 +14,9 @@ export function GroupsPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   const filteredGroups = mockGroups.filter(group => {
-    const matchesSearch = group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         group.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         group.groupCode.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = group.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         group.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         group.groupCode?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesFilter = filterStatus === 'all' || group.status === filterStatus;
     

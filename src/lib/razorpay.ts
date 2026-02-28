@@ -15,8 +15,8 @@ export interface RazorpayOptions {
   onFailure?: (error: any) => void;
 }
 
-// Set to true for demo/testing mode, false for production with real API
-const USE_DEMO_MODE = true;
+// Use environment variable for demo mode (defaults to true for development)
+const USE_DEMO_MODE = import.meta.env.VITE_USE_DEMO_MODE !== 'false';
 
 export class RazorpayService {
   private static RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_key';

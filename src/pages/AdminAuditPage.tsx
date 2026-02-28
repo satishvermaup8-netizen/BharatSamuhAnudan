@@ -39,7 +39,7 @@ export function AdminAuditPage() {
     let filtered = logs;
 
     if (actionFilter !== 'all') {
-      filtered = filtered.filter(log => log.action.toLowerCase().includes(actionFilter));
+      filtered = filtered.filter(log => log.action?.toLowerCase().includes(actionFilter));
     }
 
     if (entityFilter !== 'all') {

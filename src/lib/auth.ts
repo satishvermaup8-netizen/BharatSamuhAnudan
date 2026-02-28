@@ -198,7 +198,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function isAuthenticated(): Promise<boolean> {
   // Check localStorage first for demo auth
-  const storedUser = localStorage.getItem('auth_user');
+  const storedUser = localStorage.getItem(CURRENT_USER_KEY);
   if (storedUser) return true;
   
   const { data: { session } } = await supabase.auth.getSession();
