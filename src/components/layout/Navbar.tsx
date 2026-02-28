@@ -22,10 +22,8 @@ export function Navbar() {
   const navLinks = [
     { name: 'होम', path: ROUTES.HOME },
     { name: 'समूह', path: ROUTES.GROUPS },
-    ...(isAuthenticated ? [
-      { name: 'डैशबोर्ड', path: ROUTES.DASHBOARD },
-      { name: 'मेरे समूह', path: ROUTES.MY_GROUPS },
-    ] : []),
+    { name: 'डैशबोर्ड', path: ROUTES.DASHBOARD },
+    { name: 'मेरे समूह', path: ROUTES.MY_GROUPS },
   ];
 
   return (
