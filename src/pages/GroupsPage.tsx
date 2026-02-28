@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus } from 'lucide-react';
 import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { GroupCard } from '@/components/features/GroupCard';
+import { JoinGroupModal } from '@/components/group';
 import { mockGroups } from '@/lib/mockData';
-import { ROUTES } from '@/constants';
+import { ROUTES, MAX_GROUP_MEMBERS } from '@/constants';
+import type { Group } from '@/types';
 
 export function GroupsPage() {
   useScrollToTop();
@@ -12,6 +14,8 @@ export function GroupsPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [showJoinModal, setShowJoinModal] = useState(false);
 
   // Ensure mockGroups is loaded and valid
   console.log('📊 Groups Page - Total groups loaded:', mockGroups?.length || 0);
