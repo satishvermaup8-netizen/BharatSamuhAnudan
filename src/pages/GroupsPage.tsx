@@ -112,7 +112,10 @@ export function GroupsPage() {
             <p className="text-gray-600 mb-6">
               अपनी खोज को समायोजित करें या एक नया समूह बनाएं
             </p>
-            <button className="btn-primary inline-flex items-center space-x-2">
+            <button 
+              onClick={() => navigate(ROUTES.CREATE_GROUP)}
+              className="btn-primary inline-flex items-center space-x-2"
+            >
               <Plus className="w-5 h-5" />
               <span>नया समूह बनाएं</span>
             </button>

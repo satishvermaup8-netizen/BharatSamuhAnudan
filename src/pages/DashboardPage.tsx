@@ -1,13 +1,15 @@
 import { Users, Wallet, TrendingUp, AlertCircle, Calendar, CreditCard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { StatCard } from '@/components/features/StatCard';
 import { TransactionList } from '@/components/features/TransactionList';
 import { mockWallets, mockTransactions, mockInstallments } from '@/lib/mockData';
 import { formatCurrency, calculateProgress } from '@/lib/utils';
-import { INSTALLMENT_AMOUNT } from '@/constants';
+import { INSTALLMENT_AMOUNT, ROUTES } from '@/constants';
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const userWallets = mockWallets;
   const recentTransactions = mockTransactions.slice(0, 5);
@@ -169,7 +171,10 @@ export function DashboardPage() {
               </h3>
               
               <div className="space-y-3">
-                <button className="w-full px-4 py-3 bg-trust hover:bg-trust-dark text-white rounded-lg font-semibold transition-all duration-200 text-left">
+                <button 
+                  onClick={() => navigate(ROUTES.CREATE_GROUP)}
+                  className="w-full px-4 py-3 bg-trust hover:bg-trust-dark text-white rounded-lg font-semibold transition-all duration-200 text-left"
+                >
                   नया समूह बनाएं
                 </button>
                 <button className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-all duration-200 text-left">
