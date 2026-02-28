@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { 
   ArrowRight, Users, TrendingUp, Shield, CheckCircle, 
@@ -16,6 +16,7 @@ import { RazorpayService } from '@/lib/razorpay';
 import { useAuth } from '@/hooks/useAuth';
 
 export function HomePage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [paymentState, setPaymentState] = useState<{
     loading: boolean;
@@ -362,6 +363,114 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section className="section-container bg-white">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold text-ngo-gray-900 mb-4 font-heading">
+            यह कैसे काम करता है
+          </h2>
+          <p className="text-xl text-ngo-gray-600 max-w-3xl mx-auto">
+            तीन आसान चरणों में अपनी वित्तीय सुरक्षा शुरू करें
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Step 1: Browse & Explore */}
+          <div className={`relative transition-all duration-700 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div className="bg-gradient-to-br from-soft-blue-50 to-white p-8 rounded-2xl shadow-lg border border-soft-blue-100 h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-soft-blue-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                1
+              </div>
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-soft-blue-100 to-soft-blue-200 flex items-center justify-center text-soft-blue-700 mb-6">
+                <BookOpen className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-ngo-gray-900 mb-3 font-heading">
+                प्लेटफॉर्म ब्राउज़ करें
+              </h3>
+              <p className="text-ngo-gray-600 mb-4">
+                योजना के बारे में जानें, सफलता की कहानियाँ पढ़ें, और लाभों को समझें।
+              </p>
+              <ul className="space-y-2 text-sm text-ngo-gray-600">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-mint-green-600" />
+                  <span>1000+ सक्रिय समूह</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-mint-green-600" />
+                  <span>पारदर्शी वितरण</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-mint-green-600" />
+                  <span>सुरक्षित भुगतान</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Step 2: Create or Join */}
+          <div className={`relative transition-all duration-700 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '100ms' }}>
+            <div className="bg-gradient-to-br from-saffron-50 to-white p-8 rounded-2xl shadow-lg border border-saffron-100 h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-saffron text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                2
+              </div>
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-saffron-100 to-saffron-200 flex items-center justify-center text-saffron-700 mb-6">
+                <Users className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-ngo-gray-900 mb-3 font-heading">
+                समूह बनाएं या जुड़ें
+              </h3>
+              <p className="text-ngo-gray-600 mb-4">
+                अपना खुद का समूह बनाएं या किसी मौजूदा समूह में शामिल हों।
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  to={ROUTES.CREATE_GROUP}
+                  className="text-center px-4 py-2 bg-saffron hover:bg-saffron-dark text-white rounded-lg font-medium text-sm transition-colors"
+                >
+                  नया समूह
+                </Link>
+                <Link
+                  to={ROUTES.GROUPS}
+                  className="text-center px-4 py-2 bg-soft-blue-600 hover:bg-soft-blue-700 text-white rounded-lg font-medium text-sm transition-colors"
+                >
+                  समूह खोजें
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 3: Start Saving */}
+          <div className={`relative transition-all duration-700 ${missionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`} style={{ transitionDelay: '200ms' }}>
+            <div className="bg-gradient-to-br from-mint-green-50 to-white p-8 rounded-2xl shadow-lg border border-mint-green-100 h-full">
+              <div className="absolute -top-4 -left-4 w-12 h-12 bg-mint-green-600 text-white rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                3
+              </div>
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-mint-green-100 to-mint-green-200 flex items-center justify-center text-mint-green-700 mb-6">
+                <TrendingUp className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-ngo-gray-900 mb-3 font-heading">
+                बचत शुरू करें
+              </h3>
+              <p className="text-ngo-gray-600 mb-4">
+                हर महीने ₹100 बचाएं और 32 महीने में ₹3,200 जमा करें।
+              </p>
+              <div className="bg-mint-green-100 rounded-lg p-4 text-center">
+                <p className="text-3xl font-bold text-mint-green-800">₹100</p>
+                <p className="text-sm text-mint-green-700">प्रति माह</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Connector Lines (Desktop only) */}
+        <div className="hidden md:block absolute left-1/3 top-1/2 transform -translate-y-1/2">
+          <div className="w-24 h-1 bg-gradient-to-r from-soft-blue-300 to-saffron-300"></div>
+        </div>
+        <div className="hidden md:block absolute left-2/3 top-1/2 transform -translate-y-1/2">
+          <div className="w-24 h-1 bg-gradient-to-r from-saffron-300 to-mint-green-300"></div>
+        </div>
+      </section>
+
       {/* Impact Section */}
       <section ref={impactRef} className="section-container bg-gradient-to-br from-soft-blue-50 to-mint-green-50">
         <div className="text-center mb-16">
@@ -603,7 +712,14 @@ export function HomePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {mockGroups.filter(g => g.status === 'active').slice(0, 3).map(group => (
-            <GroupCard key={group.id} group={group} />
+            <GroupCard
+              key={group.id}
+              group={group}
+              onJoin={(g) => {
+                // Navigate to groups page with the selected group
+                navigate(`${ROUTES.GROUPS}?join=${g.id}`);
+              }}
+            />
           ))}
         </div>
 

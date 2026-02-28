@@ -3,13 +3,42 @@ import { Users, MapPin, TrendingUp, Share2, UserPlus } from 'lucide-react';
 import { Group } from '@/types';
 import { formatCurrency, calculateProgress, getStatusColor } from '@/lib/utils';
 import { ROUTES } from '@/constants';
+import { useToast } from '@/hooks/use-toast';
 
 interface GroupCardProps {
   group: Group;
+  onJoin?: (group: Group) => void;
 }
 
-export function GroupCard({ group }: GroupCardProps) {
+export function GroupCard({ group, onJoin }: GroupCardProps) {
   const progress = calculateProgress(group.memberCount, group.maxMembers);
+  const { toast } = useToast();
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const shareData = {
+      title: `${group.name} - भारत समूह अनुदान`,
+      text: `${group.name} में शामिल हों। कोड: ${group.groupCode}. स्थान: ${group.location}`,
+      url: `${window.location.origin}/groups/${group.id}`,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Share cancelled');
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+      toast({
+        title: 'लिंक कॉपी हो गया!',
+        description: 'समूह लिंक क्लिपबोर्ड पर कॉपी हो गया है।',
+      });
+    }
+  };
 
   return (
     <div className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group hover:-translate-y-1">
@@ -103,17 +132,21 @@ export function GroupCard({ group }: GroupCardProps) {
             विवरण देखें
           </Link>
           <button
+            onClick={handleShare}
             className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-all duration-200"
             title="Share"
           >
             <Share2 className="w-4 h-4" />
           </button>
-          <button
-            className="px-4 py-2.5 bg-saffron hover:bg-saffron-dark text-white rounded-lg transition-all duration-200"
-            title="Invite"
-          >
-            <UserPlus className="w-4 h-4" />
-          </button>
+          {onJoin && (
+            <button
+              onClick={() => onJoin(group)}
+              className="px-4 py-2.5 bg-saffron hover:bg-saffron-dark text-white rounded-lg transition-all duration-200"
+              title="शामिल हों"
+            >
+              <UserPlus className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>

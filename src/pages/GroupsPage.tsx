@@ -13,15 +13,22 @@ export function GroupsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  const filteredGroups = mockGroups.filter(group => {
-    const matchesSearch = group.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         group.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         group.groupCode?.toLowerCase().includes(searchQuery.toLowerCase());
+  // Ensure mockGroups is loaded and valid
+  console.log('📊 Groups Page - Total groups loaded:', mockGroups?.length || 0);
+  console.log('📊 Groups data:', mockGroups);
+
+  const filteredGroups = (mockGroups || []).filter(group => {
+    const matchesSearch = 
+      (group.name && group.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (group.location && group.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (group.groupCode && group.groupCode.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesFilter = filterStatus === 'all' || group.status === filterStatus;
     
     return matchesSearch && matchesFilter;
   });
+
+  console.log('📊 Filtered groups:', filteredGroups?.length || 0);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -100,7 +107,14 @@ export function GroupsPage() {
         {/* Groups Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredGroups.map(group => (
-            <GroupCard key={group.id} group={group} />
+            <GroupCard 
+              key={group.id} 
+              group={group} 
+              onJoin={(g) => {
+                setSelectedGroup(g);
+                setShowJoinModal(true);
+              }}
+            />
           ))}
         </div>
 
@@ -123,6 +137,28 @@ export function GroupsPage() {
               <span>नया समूह बनाएं</span>
             </button>
           </div>
+        )}
+
+        {/* Join Group Modal */}
+        {selectedGroup && (
+          <JoinGroupModal
+            isOpen={showJoinModal}
+            onClose={() => {
+              setShowJoinModal(false);
+              setSelectedGroup(null);
+            }}
+            groupId={selectedGroup.id}
+            groupName={selectedGroup.name}
+            groupCode={selectedGroup.groupCode}
+            memberCount={selectedGroup.memberCount}
+            maxMembers={MAX_GROUP_MEMBERS}
+            onJoinSuccess={() => {
+              setShowJoinModal(false);
+              setSelectedGroup(null);
+              // Refresh groups list
+              navigate(ROUTES.DASHBOARD);
+            }}
+          />
         )}
       </div>
     </div>

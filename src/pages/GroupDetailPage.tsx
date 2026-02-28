@@ -8,7 +8,8 @@ import {
 import { getGroup, getGroupMembers, getGroupRoles } from '@/lib/api';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { PaymentButton } from '@/components/payment/PaymentButton';
-import { TOTAL_INSTALLMENTS } from '@/constants';
+import { JoinGroupModal } from '@/components/group';
+import { TOTAL_INSTALLMENTS, MAX_GROUP_MEMBERS } from '@/constants';
 
 export function GroupDetailPage() {
   const { groupId } = useParams();
@@ -17,6 +18,8 @@ export function GroupDetailPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [roles, setRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [isMember, setIsMember] = useState(false);
 
   useEffect(() => {
     if (groupId) {
@@ -178,6 +181,22 @@ export function GroupDetailPage() {
                 <p className="text-gray-700">{group.description}</p>
               </div>
             )}
+
+            {/* Join Group Button */}
+            {!isMember && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setShowJoinModal(true)}
+                  className="w-full md:w-auto px-8 py-3 bg-trust hover:bg-trust-dark text-white rounded-lg font-semibold transition-colors flex items-center justify-center space-x-2"
+                >
+                  <UserPlus className="w-5 h-5" />
+                  <span>इस समूह में शामिल हों</span>
+                </button>
+                <p className="text-sm text-gray-500 mt-2">
+                  शामिल होने के लिए ₹100 की पहली किश्त का भुगतान आवश्यक है
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -321,6 +340,21 @@ export function GroupDetailPage() {
             </table>
           </div>
         </div>
+
+        {/* Join Group Modal */}
+        <JoinGroupModal
+          isOpen={showJoinModal}
+          onClose={() => setShowJoinModal(false)}
+          groupId={groupId || ''}
+          groupName={group?.name || ''}
+          groupCode={group?.group_code || ''}
+          memberCount={group?.member_count || 0}
+          maxMembers={MAX_GROUP_MEMBERS}
+          onJoinSuccess={() => {
+            setIsMember(true);
+            loadGroupDetails();
+          }}
+        />
       </div>
     </div>
   );
