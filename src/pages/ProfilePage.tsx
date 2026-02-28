@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { User, Mail, Phone, MapPin, Edit2, Save } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 
 export function ProfilePage() {
+  useScrollToTop();
+  
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({

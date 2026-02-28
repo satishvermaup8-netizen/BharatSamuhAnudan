@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus } from 'lucide-react';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { GroupCard } from '@/components/features/GroupCard';
 import { mockGroups } from '@/lib/mockData';
 import { ROUTES } from '@/constants';
 
 export function GroupsPage() {
+  useScrollToTop();
+  
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');

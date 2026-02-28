@@ -1,6 +1,7 @@
 import { Users, Wallet, TrendingUp, AlertCircle, Calendar, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { StatCard } from '@/components/features/StatCard';
 import { TransactionList } from '@/components/features/TransactionList';
 import { mockWallets, mockTransactions, mockInstallments } from '@/lib/mockData';
@@ -10,6 +11,9 @@ import { INSTALLMENT_AMOUNT, ROUTES } from '@/constants';
 export function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  // Scroll to top when page loads
+  useScrollToTop();
   
   const userWallets = mockWallets;
   const recentTransactions = mockTransactions.slice(0, 5);

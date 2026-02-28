@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Users, Plus, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { ROUTES } from '@/constants';
 
 export function MyGroupsPage() {
+  useScrollToTop();
+  
   const [myGroups] = useState([
     {
       id: '1',

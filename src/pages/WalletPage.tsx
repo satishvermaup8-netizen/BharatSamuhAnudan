@@ -1,9 +1,12 @@
 import { Wallet, Eye, EyeOff, Plus, ArrowUpRight, ArrowDownLeft, History } from 'lucide-react';
 import { useState } from 'react';
 import { AddMoneyModal } from '@/components/payment/AddMoneyModal';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { useToast } from '@/components/ui/use-toast';
 
 export function WalletPage() {
+  useScrollToTop();
+  
   const [showBalance, setShowBalance] = useState(true);
   const [addMoneyOpen, setAddMoneyOpen] = useState(false);
   const { toast } = useToast();

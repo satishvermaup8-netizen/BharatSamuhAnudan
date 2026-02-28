@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { ROUTES } from '@/constants';
 
 export function TransactionsPage() {
+  useScrollToTop();
+  
   const [transactions] = useState([
     {
       id: '1',
