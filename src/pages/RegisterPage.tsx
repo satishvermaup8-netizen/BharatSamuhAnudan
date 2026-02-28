@@ -62,6 +62,12 @@ export function RegisterPage() {
 
     setLoading(true);
     
+    console.log('📝 Signup attempt with data:', {
+      name: formData.name,
+      email: formData.email,
+      mobile: formData.mobile,
+    });
+    
     try {
       await register({
         name: formData.name,
@@ -69,11 +75,13 @@ export function RegisterPage() {
         mobile: formData.mobile,
         password: formData.password,
       });
+      console.log('✅ Signup successful!');
       setSuccess('✓ रजिस्ट्रेशन सफल! डैशबोर्ड पर जा रहे हैं...');
       setTimeout(() => {
         navigate(ROUTES.DASHBOARD);
       }, 500);
     } catch (error: any) {
+      console.error('❌ Signup error:', error.message);
       setError(error.message || 'रजिस्ट्रेशन विफल। क्षमा करें, कृपया पुनः प्रयास करें।');
       setLoading(false);
     }

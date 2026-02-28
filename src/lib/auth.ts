@@ -1,6 +1,31 @@
 import { supabase } from './supabase';
 import { User } from '@/types';
 
+// User registry key for managing all registered users
+const USERS_REGISTRY_KEY = 'app_users_registry';
+const CURRENT_USER_KEY = 'auth_user';
+const CURRENT_TOKEN_KEY = 'auth_token';
+
+// Initialize/get users registry
+function getUsersRegistry(): Record<string, any> {
+  try {
+    const registry = localStorage.getItem(USERS_REGISTRY_KEY);
+    return registry ? JSON.parse(registry) : {};
+  } catch (e) {
+    console.error('Failed to parse users registry:', e);
+    return {};
+  }
+}
+
+// Save users registry
+function saveUsersRegistry(registry: Record<string, any>): void {
+  try {
+    localStorage.setItem(USERS_REGISTRY_KEY, JSON.stringify(registry));
+  } catch (e) {
+    console.error('Failed to save users registry:', e);
+  }
+}
+
 // Map Supabase user to our User type
 function mapSupabaseUser(user: any, profile?: any): User {
   return {
@@ -17,29 +42,49 @@ function mapSupabaseUser(user: any, profile?: any): User {
 }
 
 export async function verifyOTP(mobile: string, password: string): Promise<User> {
-  // Password-based demo authentication (bypassed OTP rate limiting)
+  // Password-based demo authentication
   const email = `${mobile}@bharatsamuh.temp`;
   
-  // Simple password verification for demo
-  const DEMO_PASSWORD = '1234';
-  if (password !== DEMO_PASSWORD) {
-    throw new Error('गलत पासवर्ड। कृपया 1234 दर्ज करें।');
-  }
-
-  // Create mock user for password auth
-  const mockUser: User = {
-    id: `user-${mobile}`,
-    name: `User ${mobile}`,
-    email,
-    mobile,
-    role: 'member',
-    kycStatus: 'verified',
-    createdAt: new Date().toISOString(),
-  };
+  console.log('🔍 Verifying OTP/Password for mobile:', mobile);
   
-  // Store in localStorage for demo mode
-  localStorage.setItem('auth_user', JSON.stringify(mockUser));
-  localStorage.setItem('auth_token', `token-${mobile}`);
+  // Get users registry
+  const registry = getUsersRegistry();
+  const userKey = `user_${mobile}`;
+  const storedUserData = registry[userKey];
+  
+  let mockUser: User;
+  
+  if (storedUserData) {
+    console.log('✅ User found in registry');
+    // User exists - verify password
+    if (password !== storedUserData.password) {
+      throw new Error('गलत पासवर्ड।');
+    }
+    mockUser = storedUserData.user;
+  } else {
+    console.log('👤 New user login - using demo password');
+    // New user login - only accept demo password
+    const DEMO_PASSWORD = '1234';
+    if (password !== DEMO_PASSWORD) {
+      throw new Error('गलत पासवर्ड। कृपया 1234 दर्ज करें।');
+    }
+    
+    // Create mock user for demo login
+    mockUser = {
+      id: `user-${mobile}`,
+      name: `User ${mobile}`,
+      email,
+      mobile,
+      role: 'member',
+      kycStatus: 'verified',
+      createdAt: new Date().toISOString(),
+    };
+  }
+  
+  // Set as current user
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mockUser));
+  localStorage.setItem(CURRENT_TOKEN_KEY, `token-${mobile}`);
+  console.log('✅ User logged in:', mobile);
   
   return mockUser;
 }
@@ -64,6 +109,15 @@ export async function signInWithEmail(email: string, password: string): Promise<
 }
 
 export async function signUpWithEmail(email: string, password: string, userData: { name: string; mobile: string }): Promise<User> {
+  // Get users registry
+  const registry = getUsersRegistry();
+  const userKey = `user_${userData.mobile}`;
+  
+  // Check if user already exists
+  if (registry[userKey]) {
+    throw new Error('यह मोबाइल नंबर पहले से पंजीकृत है।');
+  }
+
   // Demo mode: Create mock user
   const mockUser: User = {
     id: `user-${userData.mobile}`,
@@ -75,31 +129,56 @@ export async function signUpWithEmail(email: string, password: string, userData:
     createdAt: new Date().toISOString(),
   };
   
-  // Store in localStorage for demo mode
-  localStorage.setItem('auth_user', JSON.stringify(mockUser));
-  localStorage.setItem('auth_token', `token-${userData.mobile}`);
-  localStorage.setItem('auth_password', password); // Store password locally for verification
+  // Store user in registry with password
+  registry[userKey] = {
+    user: mockUser,
+    password: password,
+    email: email,
+  };
+  saveUsersRegistry(registry);
+  
+  // Verify save was successful
+  const saved = localStorage.getItem(USERS_REGISTRY_KEY);
+  console.log('✅ User registered - Mobile:', userData.mobile);
+  console.log('📦 Registry saved:', saved ? 'YES' : 'NO');
+  
+  // Set as current user
+  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(mockUser));
+  localStorage.setItem(CURRENT_TOKEN_KEY, `token-${userData.mobile}`);
+  
+  console.log('✅ Current user set to:', userData.mobile);
   
   return mockUser;
 }
 
 export async function signOut(): Promise<void> {
-  // Clear localStorage for demo auth
-  localStorage.removeItem('auth_user');
-  localStorage.removeItem('auth_token');
+  // Clear only the current user session, not all user data
+  localStorage.removeItem(CURRENT_USER_KEY);
+  localStorage.removeItem(CURRENT_TOKEN_KEY);
   
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  // Check localStorage first for demo password auth
-  const storedUser = localStorage.getItem('auth_user');
+  // Check localStorage first for demo password auth (current user)
+  const storedUser = localStorage.getItem(CURRENT_USER_KEY);
   if (storedUser) {
     try {
-      return JSON.parse(storedUser);
+      const user = JSON.parse(storedUser);
+      // Verify this user still exists in registry
+      const registry = getUsersRegistry();
+      const userKey = `user_${user.mobile}`;
+      if (registry[userKey]) {
+        console.log('✅ Current user found:', user.mobile);
+        return user;
+      }
+      // If not in registry, clear the invalid session
+      localStorage.removeItem(CURRENT_USER_KEY);
+      console.log('⚠️ User not found in registry, session cleared');
     } catch (e) {
       console.error('Failed to parse stored user:', e);
+      localStorage.removeItem(CURRENT_USER_KEY);
     }
   }
   

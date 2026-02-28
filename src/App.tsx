@@ -28,9 +28,16 @@ import { isAdmin } from '@/lib/auth';
 import { ROUTES } from '@/constants';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   
-  if (!isAuthenticated) {
+  // Check localStorage as fallback for demo auth
+  const hasLocalAuth = localStorage.getItem('auth_user') !== null;
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  
+  if (!isAuthenticated && !hasLocalAuth) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
   
@@ -38,9 +45,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   
-  if (!isAuthenticated) {
+  // Check localStorage as fallback for demo auth
+  const hasLocalAuth = localStorage.getItem('auth_user') !== null;
+  
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  
+  if (!isAuthenticated && !hasLocalAuth) {
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
   
@@ -68,14 +82,7 @@ function App() {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
             <Route path={ROUTES.GROUPS} element={<GroupsPage />} />
-            <Route
-              path={ROUTES.CREATE_GROUP}
-              element={
-                <ProtectedRoute>
-                  <CreateGroupPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path={ROUTES.CREATE_GROUP} element={<CreateGroupPage />} />
             <Route path="/groups/:groupId" element={<GroupDetailPage />} />
             
             <Route

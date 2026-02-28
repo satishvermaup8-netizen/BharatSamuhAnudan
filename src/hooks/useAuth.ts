@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User } from '@/types';
 import { getCurrentUser, signOut, verifyOTP, signUpWithEmail } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
@@ -7,16 +7,19 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Initialize user from localStorage or Supabase on mount
   useEffect(() => {
     let mounted = true;
 
-    // Check for existing session
-    getCurrentUser().then(currentUser => {
+    const initializeAuth = async () => {
+      const currentUser = await getCurrentUser();
       if (mounted) {
         setUser(currentUser);
         setLoading(false);
       }
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -31,6 +34,8 @@ export function useAuth() {
           setLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
+          localStorage.removeItem('auth_user');
+          localStorage.removeItem('auth_token');
           setLoading(false);
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
           const currentUser = await getCurrentUser();
@@ -45,7 +50,7 @@ export function useAuth() {
     };
   }, []);
 
-  const login = async (mobile: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (mobile: string, password: string): Promise<boolean> => {
     try {
       const loggedInUser = await verifyOTP(mobile, password);
       setUser(loggedInUser);
@@ -54,9 +59,9 @@ export function useAuth() {
       console.error('Login error:', error.message);
       throw error;
     }
-  };
+  }, []);
 
-  const register = async (userData: { name: string; email: string; mobile: string; password: string }): Promise<boolean> => {
+  const register = useCallback(async (userData: { name: string; email: string; mobile: string; password: string }): Promise<boolean> => {
     try {
       const newUser = await signUpWithEmail(userData.email, userData.password, {
         name: userData.name,
@@ -68,12 +73,12 @@ export function useAuth() {
       console.error('Registration error:', error.message);
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await signOut();
     setUser(null);
-  };
+  }, []);
 
   return {
     user,
