@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { User } from '@/types';
+import { DEV_MODE, AUTO_OTP } from '@/constants';
 
 // Map Supabase user to our User type
 function mapSupabaseUser(user: any, profile?: any): User {
@@ -33,6 +34,34 @@ export async function sendOTP(mobile: string): Promise<void> {
 export async function verifyOTP(mobile: string, otp: string): Promise<User> {
   const email = `${mobile}@bharatsamuh.temp`;
   
+  // Development mode: Skip real OTP verification
+  if (DEV_MODE && otp === AUTO_OTP) {
+    console.log('🔓 DEV MODE: Auto-verifying OTP');
+    // In dev mode, directly sign in (bypassing real OTP check)
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true },
+    });
+
+    if (error) throw error;
+
+    // Return mock user for dev mode
+    const mockUser: User = {
+      id: Date.now().toString(),
+      name: mobile,
+      email,
+      mobile,
+      role: 'member',
+      kycStatus: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    
+    // Store in localStorage for dev mode
+    localStorage.setItem('dev_user', JSON.stringify(mockUser));
+    return mockUser;
+  }
+  
+  // Production mode: Normal OTP verification
   const { data, error } = await supabase.auth.verifyOtp({
     email,
     token: otp,

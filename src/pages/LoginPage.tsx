@@ -1,16 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Phone, Lock, ArrowRight, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ROUTES } from '@/constants';
+import { ROUTES, DEV_MODE, AUTO_OTP } from '@/constants';
 
 export function LoginPage() {
   const [mobile, setMobile] = useState('');
-  const [otp, setOtp] = useState('');
+  const [otp, setOtp] = useState(DEV_MODE ? AUTO_OTP : '');
   const [showOtp, setShowOtp] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login, sendLoginOTP } = useAuth();
   const navigate = useNavigate();
+
+  // Auto-fill OTP in dev mode
+  useEffect(() => {
+    if (DEV_MODE && showOtp) {
+      setOtp(AUTO_OTP);
+    }
+  }, [showOtp]);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,9 +126,15 @@ export function LoginPage() {
                     autoFocus
                   />
                 </div>
-                <p className="mt-2 text-sm text-gray-600">
-                  {mobile} पर OTP भेजा गया है
-                </p>
+                {DEV_MODE ? (
+                  <p className="mt-2 text-sm font-semibold text-green-600">
+                    🔓 DEV MODE: OTP auto-filled (1234)
+                  </p>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-600">
+                    {mobile} पर OTP भेजा गया है
+                  </p>
+                )}
               </div>
 
               <div className="flex items-center justify-between">

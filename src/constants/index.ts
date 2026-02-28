@@ -44,6 +44,10 @@ export const CLAIM_STATUS = {
   PAID: 'paid',
 } as const;
 
+// Development Mode Settings
+export const DEV_MODE = true; // Set to false for production
+export const AUTO_OTP = '1234'; // Fixed OTP for development
+
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
