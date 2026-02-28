@@ -9,7 +9,7 @@ import { formatCurrency, calculateProgress } from '@/lib/utils';
 import { INSTALLMENT_AMOUNT, ROUTES } from '@/constants';
 
 export function DashboardPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   
   // Scroll to top when page loads
@@ -22,6 +22,47 @@ export function DashboardPage() {
   const paidInstallments = userInstallments.filter(i => i.status === 'paid').length;
   const totalBalance = userWallets.reduce((sum, w) => sum + w.balance, 0);
   const nextDueDate = userInstallments.find(i => i.status === 'pending')?.dueDate;
+
+  // If loading, show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-trust mx-auto mb-4"></div>
+          <p className="text-gray-600">लोड हो रहा है...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user, show login prompt
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 max-w-md text-center">
+          <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2 font-heading">डैशबोर्ड एक्सेस करें</h1>
+          <p className="text-gray-600 mb-6">
+            डैशबोर्ड देखने के लिए कृपया पहले लॉगिन या रजिस्टर करें।
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate(ROUTES.LOGIN)}
+              className="w-full px-6 py-3 bg-trust hover:bg-trust-dark text-white rounded-lg font-semibold transition-all duration-200"
+            >
+              लॉगिन करें
+            </button>
+            <button
+              onClick={() => navigate(ROUTES.REGISTER)}
+              className="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-all duration-200"
+            >
+              नया अकाउंट बनाएं
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
