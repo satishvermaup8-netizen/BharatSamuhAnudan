@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { 
   ArrowRight, Users, TrendingUp, Shield, CheckCircle, 
   BookOpen, Heart, Users2, Lightbulb, Award, Sparkles,
-  HandHeart, Heart as HeartIcon, Gift, Building2, Star, MessageCircle
+  HandHeart, Heart as HeartIcon, Gift, Building2, Star, MessageCircle, AlertCircle
 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useAnimatedCounter } from '@/hooks/useAnimatedCounter';
@@ -11,8 +12,76 @@ import { FeaturesSection } from '@/components/features/FeaturesSection';
 import { PaymentVisualization } from '@/components/features/PaymentVisualization';
 import { mockDashboardStats, mockGroups } from '@/lib/mockData';
 import { GroupCard } from '@/components/features/GroupCard';
+import { RazorpayService } from '@/lib/razorpay';
+import { useAuth } from '@/hooks/useAuth';
 
 export function HomePage() {
+  const { user } = useAuth();
+  const [paymentState, setPaymentState] = useState<{
+    loading: boolean;
+    error: string | null;
+    success: string | null;
+  }>({ loading: false, error: null, success: null });
+  const [customAmount, setCustomAmount] = useState('');
+
+  const handleDonation = async (amount: number) => {
+    if (!user) {
+      setPaymentState({
+        loading: false,
+        error: 'दान करने से पहले कृपया लॉगिन करें',
+        success: null
+      });
+      return;
+    }
+
+    setPaymentState({ loading: true, error: null, success: null });
+
+    try {
+      await RazorpayService.openCheckout({
+        amount,
+        type: 'donation',
+        metadata: {
+          donationAmount: amount,
+          userId: user.id,
+          donationType: 'general'
+        },
+        onSuccess: (response) => {
+          setPaymentState({
+            loading: false,
+            error: null,
+            success: `✓ धन्यवाद! आपका ₹${amount} का दान सफलतापूर्वक पूरा हुआ।`
+          });
+          setCustomAmount('');
+          // Clear success message after 5 seconds
+          setTimeout(() => {
+            setPaymentState({ loading: false, error: null, success: null });
+          }, 5000);
+        },
+        onFailure: (error) => {
+          setPaymentState({
+            loading: false,
+            error: error?.message || 'दान में त्रुटि। कृपया पुनः प्रयास करें।',
+            success: null
+          });
+          // Clear error after 5 seconds
+          setTimeout(() => {
+            setPaymentState({ loading: false, error: null, success: null });
+          }, 5000);
+        }
+      });
+    } catch (error: any) {
+      setPaymentState({
+        loading: false,
+        error: error?.message || 'दान प्रक्रिया विफल। कृपया पुनः प्रयास करें।',
+        success: null
+      });
+      // Clear error after 5 seconds
+      setTimeout(() => {
+        setPaymentState({ loading: false, error: null, success: null });
+      }, 5000);
+    }
+  };
+
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
   const { ref: statsRef, isVisible: statsVisible } = useScrollAnimation();
   const { ref: missionRef, isVisible: missionVisible } = useScrollAnimation();
@@ -398,11 +467,34 @@ export function HomePage() {
             </p>
           </div>
 
+          {/* Payment Status Messages */}
+          {paymentState.success && (
+            <div className="mb-6 p-4 bg-green-50 border-2 border-green-400 rounded-lg flex items-center space-x-3 animate-pulse">
+              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-base font-semibold text-green-700">{paymentState.success}</p>
+                <p className="text-xs text-green-600 mt-1">धन्यवाद आपके योगदान के लिए!</p>
+              </div>
+            </div>
+          )}
+
+          {paymentState.error && (
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-400 rounded-lg flex items-center space-x-3">
+              <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-base font-semibold text-red-700">{paymentState.error}</p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {donationAmounts.map((donation, index) => (
               <div
                 key={index}
-                className={`bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-soft-blue-300 cursor-pointer ${
+                onClick={() => !paymentState.loading && handleDonation(donation.amount)}
+                className={`bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-soft-blue-300 ${
+                  paymentState.loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                } ${
                   donationVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
@@ -411,6 +503,11 @@ export function HomePage() {
                 <p className="text-3xl font-bold text-saffron mb-2">₹{donation.amount}</p>
                 <p className="text-lg font-semibold text-ngo-gray-900 mb-2">{donation.title}</p>
                 <p className="text-ngo-gray-600">{donation.text}</p>
+                <div className="mt-4 pt-4 border-t border-ngo-gray-200">
+                  <p className="text-sm text-soft-blue-600 font-semibold hover:text-soft-blue-700">
+                    {paymentState.loading ? 'प्रक्रिया में...' : 'दान करने के लिए क्लिक करें'}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -420,10 +517,33 @@ export function HomePage() {
               <input
                 type="number"
                 placeholder="कस्टम राशि दर्ज करें"
+                value={customAmount}
+                onChange={(e) => setCustomAmount(e.target.value)}
                 className="px-6 py-3 border-2 border-soft-blue-300 rounded-xl focus:outline-none focus:border-soft-blue-600 w-full sm:w-auto"
+                disabled={paymentState.loading}
               />
-              <button className="px-10 py-3 bg-saffron hover:bg-saffron-dark text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-2xl flex items-center space-x-2 group w-full sm:w-auto justify-center">
-                <span>अभी दान करें</span>
+              <button
+                onClick={() => {
+                  const amount = parseInt(customAmount);
+                  if (amount && amount > 0) {
+                    handleDonation(amount);
+                  } else {
+                    setPaymentState({
+                      loading: false,
+                      error: 'कृपया ₹1 से अधिक राशि दर्ज करें',
+                      success: null
+                    });
+                    setTimeout(() => {
+                      setPaymentState({ loading: false, error: null, success: null });
+                    }, 3000);
+                  }
+                }}
+                disabled={paymentState.loading}
+                className={`px-10 py-3 bg-saffron hover:bg-saffron-600 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-2xl flex items-center space-x-2 group w-full sm:w-auto justify-center ${
+                  paymentState.loading ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
+              >
+                <span>{paymentState.loading ? 'प्रक्रिया में...' : 'अभी दान करें'}</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
             </div>
