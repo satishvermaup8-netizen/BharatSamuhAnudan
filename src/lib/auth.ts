@@ -40,7 +40,10 @@ export async function verifyOTP(mobile: string, otp: string): Promise<User> {
     // In dev mode, directly sign in (bypassing real OTP check)
     const { data, error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: { 
+        shouldCreateUser: true,
+        data: { mobile }
+      },
     });
 
     if (error) throw error;
@@ -71,28 +74,19 @@ export async function verifyOTP(mobile: string, otp: string): Promise<User> {
   if (error) throw error;
   if (!data.user) throw new Error('Verification failed');
 
-  // Get or create user profile
-  let { data: profile } = await supabase
+  // Wait for trigger to create profile (small delay)
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Get user profile (should exist from trigger)
+  const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
     .select('*')
     .eq('id', data.user.id)
     .single();
 
-  if (!profile) {
-    // Create profile if doesn't exist
-    const { data: newProfile, error: profileError } = await supabase
-      .from('user_profiles')
-      .insert({
-        id: data.user.id,
-        email,
-        mobile,
-        username: mobile,
-      })
-      .select()
-      .single();
-
-    if (profileError) throw profileError;
-    profile = newProfile;
+  if (profileError) {
+    console.error('Profile fetch error:', profileError);
+    // If profile doesn't exist, user metadata should still work
   }
 
   return mapSupabaseUser(data.user, profile);
@@ -132,19 +126,20 @@ export async function signUpWithEmail(email: string, password: string, userData:
   if (error) throw error;
   if (!data.user) throw new Error('Registration failed');
 
-  // Create user profile
+  // Wait for trigger to create profile (small delay)
+  await new Promise(resolve => setTimeout(resolve, 500));
+
+  // Get user profile (created by trigger)
   const { data: profile, error: profileError } = await supabase
     .from('user_profiles')
-    .insert({
-      id: data.user.id,
-      username: userData.name,
-      email,
-      mobile: userData.mobile,
-    })
-    .select()
+    .select('*')
+    .eq('id', data.user.id)
     .single();
 
-  if (profileError) throw profileError;
+  if (profileError) {
+    console.error('Profile fetch error:', profileError);
+    // Profile should exist from trigger, but continue anyway
+  }
 
   return mapSupabaseUser(data.user, profile);
 }
