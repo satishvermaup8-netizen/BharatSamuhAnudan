@@ -1,25 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Phone, Lock, ArrowRight, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { ROUTES, DEV_MODE, AUTO_OTP } from '@/constants';
+import { ROUTES } from '@/constants';
+
+const DEMO_PASSWORD = '1234';
 
 export function LoginPage() {
   const [mobile, setMobile] = useState('');
-  const [otp, setOtp] = useState(DEV_MODE ? AUTO_OTP : '');
-  const [showOtp, setShowOtp] = useState(false);
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, sendLoginOTP } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Auto-fill OTP in dev mode
-  useEffect(() => {
-    if (DEV_MODE && showOtp) {
-      setOtp(AUTO_OTP);
-    }
-  }, [showOtp]);
-
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!mobile || mobile.length !== 10) {
@@ -27,25 +21,15 @@ export function LoginPage() {
       return;
     }
     
-    setLoading(true);
-    
-    try {
-      await sendLoginOTP(mobile);
-      setShowOtp(true);
-      alert('OTP आपके मोबाइल नंबर पर भेजा गया है');
-    } catch (error: any) {
-      alert(error.message || 'OTP भेजने में विफल');
+    if (password !== DEMO_PASSWORD) {
+      alert('गलत पासवर्ड। कृपया 1234 दर्ज करें।');
+      return;
     }
     
-    setLoading(false);
-  };
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
     setLoading(true);
     
     try {
-      await login(mobile, otp);
+      await login(mobile, DEMO_PASSWORD);
       navigate(ROUTES.DASHBOARD);
     } catch (error: any) {
       alert(error.message || 'लॉगिन विफल। कृपया पुनः प्रयास करें।');
@@ -70,8 +54,7 @@ export function LoginPage() {
             </p>
           </div>
 
-          {!showOtp ? (
-            <form onSubmit={handleSendOtp} className="space-y-6">
+          <form onSubmit={handleLogin} className="space-y-6">
               <div>
                 <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-2">
                   मोबाइल नंबर
@@ -94,64 +77,27 @@ export function LoginPage() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary flex items-center justify-center space-x-2 group"
-              >
-                <span>{loading ? 'OTP भेजा जा रहा है...' : 'OTP भेजें'}</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
-              </button>
-            </form>
-          ) : (
-            <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
-                  OTP दर्ज करें (4 अंक)
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  पासवर्ड
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    id="otp"
-                    type="text"
+                    id="password"
+                    type="password"
                     required
-                    maxLength={4}
-                    pattern="[0-9]{4}"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="input-field pl-10"
                     placeholder="1234"
-                    autoFocus
                   />
                 </div>
-                {DEV_MODE ? (
-                  <p className="mt-2 text-sm font-semibold text-green-600">
-                    🔓 DEV MODE: OTP auto-filled (1234)
-                  </p>
-                ) : (
-                  <p className="mt-2 text-sm text-gray-600">
-                    {mobile} पर OTP भेजा गया है
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setShowOtp(false)}
-                  className="text-sm text-trust hover:text-trust-dark font-medium"
-                >
-                  नंबर बदलें
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  className="text-sm text-trust hover:text-trust-dark font-medium"
-                >
-                  OTP फिर से भेजें
-                </button>
+                <p className="mt-2 text-sm text-blue-600 font-medium">
+                  💡 डेमो पासवर्ड: 1234
+                </p>
               </div>
 
               <button
@@ -163,7 +109,6 @@ export function LoginPage() {
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
               </button>
             </form>
-          )}
 
           <div className="mt-6">
             <div className="relative">
@@ -189,7 +134,7 @@ export function LoginPage() {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <div className="flex items-center justify-center space-x-2 text-gray-600">
               <Shield className="w-4 h-4" />
-              <span className="text-xs">सुरक्षित OTP आधारित लॉगिन</span>
+              <span className="text-xs">पासवर्ड आधारित डेमो लॉगिन</span>
             </div>
           </div>
         </div>
