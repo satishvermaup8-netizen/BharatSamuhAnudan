@@ -6,6 +6,8 @@ import { GroupInviteModal } from '@/components/group';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { User } from '@/types';
+import { createGroupBackend, CreateGroupBackendData } from '@/lib/api';
+import { isMockAuth } from '@/lib/auth';
 
 // Mock users for leader selection (in production, fetch from API)
 const MOCK_USERS: User[] = [
@@ -62,22 +64,56 @@ export function CreateGroupPage() {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Check if using mock auth (backend API won't work)
+      if (isMockAuth()) {
+        toast({
+          title: 'सूचना',
+          description: 'बैकएंड API उपलब्ध नहीं है। डेमो मोड में समूह बनाया जा रहा है...',
+        });
+        
+        // Simulate for demo mode
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const groupCode = `GRP${Date.now().toString(36).toUpperCase()}`;
+        const groupId = `group_${Date.now()}`;
+        
+        setCreatedGroup({
+          id: groupId,
+          name: formData.name,
+          code: groupCode,
+        });
+        
+        toast({
+          title: 'समूह बनाया गया!',
+          description: `✓ ${formData.name} डेमो मोड में बनाया गया।`,
+        });
+        
+        setShowInviteModal(true);
+        return;
+      }
       
-      // Generate group code
-      const groupCode = `GRP${Date.now().toString(36).toUpperCase()}`;
-      const groupId = `group_${Date.now()}`;
+      // Call backend API
+      const groupData: CreateGroupBackendData = {
+        name: formData.name,
+        description: formData.description,
+        location: formData.location,
+        contributionAmount: parseInt(formData.monthlyContribution),
+        groupType: formData.groupType as 'savings' | 'emergency' | 'business',
+        maxMembers: parseInt(formData.maxMembers),
+        leaderId: formData.leaderId || currentUser?.id || '',
+      };
+      
+      const response = await createGroupBackend(groupData);
       
       setCreatedGroup({
-        id: groupId,
-        name: formData.name,
-        code: groupCode,
+        id: response.id,
+        name: response.name,
+        code: response.groupCode,
       });
       
       toast({
         title: 'समूह बनाया गया!',
-        description: `✓ ${formData.name} सफलतापूर्वक बनाया गया।`,
+        description: `✓ ${response.name} सफलतापूर्वक बनाया गया। कोड: ${response.groupCode}`,
       });
       
       // Show invite modal instead of navigating away

@@ -310,6 +310,75 @@ export async function createGroup(groupData: {
   return data;
 }
 
+// Create group via backend API
+export interface CreateGroupBackendData {
+  name: string;
+  description: string;
+  location: string;
+  contributionAmount: number;
+  groupType: 'savings' | 'emergency' | 'business';
+  maxMembers: number;
+  leaderId: string;
+}
+
+export interface CreateGroupResponse {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  groupCode: string;
+  contributionAmount: number;
+  groupType: string;
+  maxMembers: number;
+  leaderId: string;
+  status: string;
+  createdAt: string;
+}
+
+export async function createGroupBackend(groupData: CreateGroupBackendData): Promise<CreateGroupResponse> {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Authentication required. Please log in again.');
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/groups`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(groupData),
+      signal: controller.signal,
+      credentials: 'include',
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      let errorMessage = `Failed to create group (${response.status})`;
+      try {
+        const errorJson = await response.json();
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // Use default error message
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw error;
+  }
+}
+
 export async function joinGroup(groupId: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
