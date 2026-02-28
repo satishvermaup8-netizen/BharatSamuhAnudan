@@ -64,36 +64,23 @@ export async function signInWithEmail(email: string, password: string): Promise<
 }
 
 export async function signUpWithEmail(email: string, password: string, userData: { name: string; mobile: string }): Promise<User> {
-  const { data, error } = await supabase.auth.signUp({
+  // Demo mode: Create mock user
+  const mockUser: User = {
+    id: `user-${userData.mobile}`,
+    name: userData.name,
     email,
-    password,
-    options: {
-      data: {
-        username: userData.name,
-        mobile: userData.mobile,
-      },
-    },
-  });
-
-  if (error) throw error;
-  if (!data.user) throw new Error('Registration failed');
-
-  // Wait for trigger to create profile (small delay)
-  await new Promise(resolve => setTimeout(resolve, 500));
-
-  // Get user profile (created by trigger)
-  const { data: profile, error: profileError } = await supabase
-    .from('user_profiles')
-    .select('*')
-    .eq('id', data.user.id)
-    .single();
-
-  if (profileError) {
-    console.error('Profile fetch error:', profileError);
-    // Profile should exist from trigger, but continue anyway
-  }
-
-  return mapSupabaseUser(data.user, profile);
+    mobile: userData.mobile,
+    role: 'member',
+    kycStatus: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+  
+  // Store in localStorage for demo mode
+  localStorage.setItem('auth_user', JSON.stringify(mockUser));
+  localStorage.setItem('auth_token', `token-${userData.mobile}`);
+  localStorage.setItem('auth_password', password); // Store password locally for verification
+  
+  return mockUser;
 }
 
 export async function signOut(): Promise<void> {
