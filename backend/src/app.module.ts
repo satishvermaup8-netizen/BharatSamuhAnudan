@@ -17,6 +17,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { CommonModule } from './common/common.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { InvitationsModule } from './invitations/invitations.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -105,6 +106,7 @@ import { InvitationsModule } from './invitations/invitations.module';
     AnalyticsModule,
     UploadsModule,
     InvitationsModule,
+    AdminModule,
   ],
   providers: [
     {
