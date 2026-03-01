@@ -116,22 +116,28 @@ export function Navbar() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                {/* Login Button - Subtle */}
                 <Link
                   to={ROUTES.LOGIN}
-                  className={`px-5 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                  className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 border-2 ${
                     isScrolled
-                      ? 'text-trust hover:bg-gray-100'
-                      : 'text-white hover:bg-white/10'
+                      ? 'text-gray-700 border-gray-300 hover:bg-gray-100'
+                      : 'text-white border-white/30 hover:bg-white/10'
                   }`}
                 >
-                  लॉगिन
+                  लॉगिन करें
                 </Link>
+                {/* Register Button - Prominent with Animation */}
                 <Link
                   to={ROUTES.REGISTER}
-                  className="px-5 py-2 bg-saffron hover:bg-saffron-dark text-white rounded-lg font-semibold transition-all duration-200 shadow-md hover:shadow-lg"
+                  className="relative px-6 py-2.5 bg-gradient-to-r from-saffron-500 to-saffron-600 hover:from-saffron-600 hover:to-saffron-700 text-white rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 group"
                 >
-                  रजिस्टर करें
+                  <span className="relative z-10 flex items-center space-x-2">
+                    <span>नया खाता बनाएं</span>
+                    <span className="text-lg group-hover:translate-x-1 transition-transform duration-200">→</span>
+                  </span>
+                  <div className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
                 </Link>
               </div>
             )}
