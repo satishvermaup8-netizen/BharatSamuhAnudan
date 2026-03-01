@@ -2,6 +2,24 @@ import { supabase } from './supabase';
 import { getAuthToken } from './auth';
 import { User, Group, Transaction, Wallet, Installment, DeathClaim, AdminApproval, Nominee } from '@/types';
 
+// Interface for user profile updates to maintain type safety
+interface UserProfileUpdate {
+  name?: string;
+  email?: string;
+  phone?: string;
+  mobile?: string;
+  username?: string;
+  full_name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  aadhaar_number?: string;
+  pan_number?: string;
+  profile_photo?: string;
+  [key: string]: any; // Allow additional fields for extensibility while maintaining primary type safety
+}
+
 // =====================================================
 // USER PROFILES & KYC
 // =====================================================
@@ -17,7 +35,7 @@ export async function getUserProfile(userId: string) {
   return data;
 }
 
-export async function updateUserProfile(userId: string, updates: Partial<User>) {
+export async function updateUserProfile(userId: string, updates: Partial<UserProfileUpdate>) {
   const { data, error } = await supabase
     .from('user_profiles')
     .update(updates)
@@ -27,6 +45,57 @@ export async function updateUserProfile(userId: string, updates: Partial<User>) 
 
   if (error) throw error;
   return data;
+}
+
+// Update user status (block/unblock/suspend)
+export async function updateUserStatus(userId: string, status: 'active' | 'inactive' | 'suspended') {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update({ status })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// Update user role
+export async function updateUserRole(userId: string, role: string) {
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .update({ role })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+// Get user nominees
+export async function getUserNominees(userId: string) {
+  const { data, error } = await supabase
+    .from('nominees')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data || [];
+}
+
+// Get user group memberships
+export async function getUserGroupMemberships(userId: string) {
+  const { data, error } = await supabase
+    .from('group_members')
+    .select(`
+      *,
+      group:groups(id, name, status)
+    `)
+    .eq('user_id', userId);
+
+  if (error) throw error;
+  return data || [];
 }
 
 export async function submitKYC(kycData: {

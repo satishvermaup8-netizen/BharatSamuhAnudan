@@ -76,9 +76,10 @@ export function RegisterPage() {
         password: formData.password,
       });
       console.log('✅ Signup successful!');
-      setSuccess('🎉 रजिस्ट्रेशन सफल! आपका खाता बन गया है।');
+      setSuccess('🎉 रजिस्ट्रेशन सफल! कृपया अब लॉगिन करें।');
       setTimeout(() => {
-        navigate(ROUTES.DASHBOARD);
+        // Redirect to login page after successful registration
+        navigate(ROUTES.LOGIN, { state: { registeredMobile: formData.mobile } });
       }, 2000);
     } catch (error: any) {
       console.error('❌ Signup error:', error.message);

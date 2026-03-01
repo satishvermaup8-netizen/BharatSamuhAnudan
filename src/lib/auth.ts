@@ -35,6 +35,7 @@ function mapSupabaseUser(user: any, profile?: any): User {
     mobile: profile?.mobile || user.user_metadata?.mobile || '',
     role: profile?.role || 'member',
     kycStatus: profile?.kyc_status || 'pending',
+    status: profile?.status || 'active',
     createdAt: user.created_at || new Date().toISOString(),
     aadhaarNumber: profile?.aadhaar_number,
     panNumber: profile?.pan_number,
@@ -82,6 +83,7 @@ export async function verifyOTP(mobile: string, password: string): Promise<User>
       mobile,
       role: 'member',
       kycStatus: 'verified',
+      status: 'active',
       createdAt: new Date().toISOString(),
     };
     loginPassword = DEMO_PASSWORD;
@@ -181,6 +183,7 @@ export async function signUpWithEmail(email: string, password: string, userData:
     mobile: userData.mobile,
     role: 'member',
     kycStatus: 'pending',
+    status: 'active',
     createdAt: new Date().toISOString(),
   };
   
@@ -272,6 +275,24 @@ export async function isAuthenticated(): Promise<boolean> {
   
   const { data: { session } } = await supabase.auth.getSession();
   return !!session;
+}
+
+/**
+ * Check if there are any registered users in the system
+ * This is used to determine whether to show Register button or just Login button
+ */
+export function hasRegisteredUsers(): boolean {
+  const registry = getUsersRegistry();
+  return Object.keys(registry).length > 0;
+}
+
+/**
+ * Check if a specific mobile number is already registered
+ */
+export function isMobileRegistered(mobile: string): boolean {
+  const registry = getUsersRegistry();
+  const userKey = `user_${mobile}`;
+  return !!registry[userKey];
 }
 
 export function hasRole(user: User | null, roles: string[]): boolean {

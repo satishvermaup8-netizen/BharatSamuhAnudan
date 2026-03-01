@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User } from '@/types';
-import { getCurrentUser, signOut, verifyOTP, signUpWithEmail } from '@/lib/auth';
+import { getCurrentUser, signOut, verifyOTP, signUpWithEmail, hasRegisteredUsers, isMobileRegistered } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
 export function useAuth() {
@@ -21,7 +21,7 @@ export function useAuth() {
 
     initializeAuth();
 
-    // Listen for auth state changes
+    // Listen for auth state changes from Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
@@ -44,9 +44,27 @@ export function useAuth() {
       }
     );
 
+    // Listen for localStorage changes (for demo auth across tabs)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_user') {
+        console.log('localStorage auth_user changed, re-initializing...');
+        initializeAuth();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Listen for custom auth change events (same tab)
+    const handleAuthChange = () => {
+      console.log('Auth change event received, re-initializing...');
+      initializeAuth();
+    };
+    window.addEventListener('auth_change', handleAuthChange);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth_change', handleAuthChange);
     };
   }, []);
 
@@ -54,6 +72,8 @@ export function useAuth() {
     try {
       const loggedInUser = await verifyOTP(mobile, password);
       setUser(loggedInUser);
+      // Dispatch custom event to notify other components about auth change
+      window.dispatchEvent(new Event('auth_change'));
       return true;
     } catch (error: any) {
       console.error('Login error:', error.message);
@@ -78,6 +98,8 @@ export function useAuth() {
   const logout = useCallback(async () => {
     await signOut();
     setUser(null);
+    // Dispatch custom event to notify other components about auth change
+    window.dispatchEvent(new Event('auth_change'));
   }, []);
 
   return {
@@ -87,5 +109,7 @@ export function useAuth() {
     login,
     register,
     logout,
+    hasRegisteredUsers: hasRegisteredUsers(),
+    isMobileRegistered,
   };
 }

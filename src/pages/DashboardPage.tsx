@@ -15,6 +15,17 @@ export function DashboardPage() {
   // Scroll to top when page loads
   useScrollToTop();
   
+  // Check localStorage for user data as fallback
+  let localUser = null;
+  try {
+    const storedUser = localStorage.getItem('auth_user');
+    localUser = storedUser ? JSON.parse(storedUser) : null;
+  } catch (e) {
+    console.error('Failed to parse stored user:', e);
+    localStorage.removeItem('auth_user');
+  }
+  const currentUser = user || localUser;
+  
   const userWallets = mockWallets;
   const recentTransactions = mockTransactions.slice(0, 5);
   const userInstallments = mockInstallments;
@@ -24,7 +35,7 @@ export function DashboardPage() {
   const nextDueDate = userInstallments.find(i => i.status === 'pending')?.dueDate;
 
   // If loading, show loading state
-  if (loading) {
+  if (loading && !currentUser) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
         <div className="text-center">
@@ -36,7 +47,7 @@ export function DashboardPage() {
   }
 
   // If no user, show login prompt
-  if (!user) {
+  if (!currentUser) {
     return (
       <div className="min-h-screen bg-gray-50 py-8 flex items-center justify-center">
         <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 max-w-md text-center">
@@ -70,7 +81,7 @@ export function DashboardPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 font-heading mb-2">
-            नमस्ते, {user?.name.split(' ')[0]} 👋
+            नमस्ते, {currentUser?.name.split(' ')[0]} 👋
           </h1>
           <p className="text-gray-600">
             आपके खाते का अवलोकन

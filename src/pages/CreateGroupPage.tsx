@@ -11,9 +11,9 @@ import { isMockAuth } from '@/lib/auth';
 
 // Mock users for leader selection (in production, fetch from API)
 const MOCK_USERS: User[] = [
-  { id: 'user_1', name: 'राजेश कुमार', email: 'rajesh@example.com', mobile: '9876543210', role: 'super_admin', kycStatus: 'verified', createdAt: new Date().toISOString() },
-  { id: 'user_2', name: 'प्रिया शर्मा', email: 'priya@example.com', mobile: '9876543211', role: 'group_admin', kycStatus: 'verified', createdAt: new Date().toISOString() },
-  { id: 'user_3', name: 'अमित पटेल', email: 'amit@example.com', mobile: '9876543212', role: 'group_admin', kycStatus: 'verified', createdAt: new Date().toISOString() },
+  { id: 'user_1', name: 'राजेश कुमार', email: 'rajesh@example.com', mobile: '9876543210', role: 'super_admin', kycStatus: 'verified', status: 'active', createdAt: new Date().toISOString() },
+  { id: 'user_2', name: 'प्रिया शर्मा', email: 'priya@example.com', mobile: '9876543211', role: 'group_admin', kycStatus: 'verified', status: 'active', createdAt: new Date().toISOString() },
+  { id: 'user_3', name: 'अमित पटेल', email: 'amit@example.com', mobile: '9876543212', role: 'group_admin', kycStatus: 'verified', status: 'active', createdAt: new Date().toISOString() },
 ];
 
 export function CreateGroupPage() {

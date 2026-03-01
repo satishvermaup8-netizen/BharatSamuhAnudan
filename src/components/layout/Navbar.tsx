@@ -7,7 +7,7 @@ import { ROUTES } from '@/constants';
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, hasRegisteredUsers } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export function Navbar() {
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                {/* Login Button - Subtle */}
+                {/* Login Button - Always show */}
                 <Link
                   to={ROUTES.LOGIN}
                   className={`px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 border-2 ${
@@ -128,17 +128,19 @@ export function Navbar() {
                 >
                   लॉगिन करें
                 </Link>
-                {/* Register Button - Prominent with Animation */}
-                <Link
-                  to={ROUTES.REGISTER}
-                  className="relative px-6 py-2.5 bg-gradient-to-r from-saffron-500 to-saffron-600 hover:from-saffron-600 hover:to-saffron-700 text-white rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 group"
-                >
-                  <span className="relative z-10 flex items-center space-x-2">
-                    <span>नया खाता बनाएं</span>
-                    <span className="text-lg group-hover:translate-x-1 transition-transform duration-200">→</span>
-                  </span>
-                  <div className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-                </Link>
+                {/* Register Button - Only show if no users registered yet */}
+                {!hasRegisteredUsers && (
+                  <Link
+                    to={ROUTES.REGISTER}
+                    className="relative px-6 py-2.5 bg-gradient-to-r from-saffron-500 to-saffron-600 hover:from-saffron-600 hover:to-saffron-700 text-white rounded-lg font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 group"
+                  >
+                    <span className="relative z-10 flex items-center space-x-2">
+                      <span>नया खाता बनाएं</span>
+                      <span className="text-lg group-hover:translate-x-1 transition-transform duration-200">→</span>
+                    </span>
+                    <div className="absolute inset-0 bg-white/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+                  </Link>
+                )}
               </div>
             )}
           </div>
@@ -211,7 +213,9 @@ export function Navbar() {
             ) : (
               <>
                 <div className="px-4 py-3 bg-blue-50 border-b-2 border-blue-200">
-                  <p className="text-xs text-blue-600 font-medium">लॉगिन नहीं है</p>
+                  <p className="text-xs text-blue-600 font-medium">
+                    {hasRegisteredUsers ? 'पंजीकृत उपयोगकर्ता' : 'लॉगिन नहीं है'}
+                  </p>
                 </div>
                 <Link
                   to={ROUTES.LOGIN}
@@ -220,13 +224,15 @@ export function Navbar() {
                 >
                   🔐 लॉगिन करें
                 </Link>
-                <Link
-                  to={ROUTES.REGISTER}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-white bg-saffron hover:bg-saffron-dark font-semibold"
-                >
-                  ✨ नया खाता बनाएं
-                </Link>
+                {!hasRegisteredUsers && (
+                  <Link
+                    to={ROUTES.REGISTER}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="block px-4 py-3 text-white bg-saffron hover:bg-saffron-dark font-semibold"
+                  >
+                    ✨ नया खाता बनाएं
+                  </Link>
+                )}
               </>
             )}
           </div>

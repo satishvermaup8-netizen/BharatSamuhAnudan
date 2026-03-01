@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Phone, Lock, ArrowRight, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/constants';
@@ -12,8 +12,22 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { login } = useAuth();
+  const [showNewUserInfo, setShowNewUserInfo] = useState(false);
+  const { login, isMobileRegistered, hasRegisteredUsers } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if user just registered
+  useEffect(() => {
+    const state = location.state as { registeredMobile?: string };
+    if (state?.registeredMobile) {
+      setMobile(state.registeredMobile);
+      setSuccess('आपका खाता बन गया है! कृपया अपने पासवर्ड से लॉगिन करें।');
+      setShowNewUserInfo(true);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const validateMobile = (value: string) => {
     return value.length === 10 && /^[6-9]/.test(value);
@@ -39,16 +53,22 @@ export function LoginPage() {
       setError('कृपया पासवर्ड दर्ज करें');
       return;
     }
-
-    if (password !== DEMO_PASSWORD) {
-      setError(`गलत पासवर्ड। डेमो के लिए 1234 दर्ज करें।`);
+    
+    // Check if this mobile is registered
+    const isRegistered = isMobileRegistered(mobile);
+    
+    // If registered, any password works (the registered password)
+    // If not registered, only DEMO_PASSWORD works for first-time demo login
+    if (!isRegistered && password !== DEMO_PASSWORD) {
+      setError(`गलत पासवर्ड। नए उपयोगकर्ताओं के लिए डेमो पासवर्ड 1234 दर्ज करें।`);
       return;
     }
     
     setLoading(true);
     
     try {
-      await login(mobile, DEMO_PASSWORD);
+      // Pass the actual password entered by user
+      await login(mobile, password);
       // Show success message before redirect
       setSuccess('🎉 लॉगिन सफल! आप अब लॉगिन हो गए हैं।');
       
@@ -162,8 +182,17 @@ export function LoginPage() {
               </div>
               <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-700">
-                  <span className="font-semibold">💡 डेमो Credentials:</span><br />
-                  पासवर्ड: <code className="bg-blue-100 px-2 py-1 rounded font-mono font-bold">1234</code>
+                  {!hasRegisteredUsers ? (
+                    <>
+                      <span className="font-semibold">💡 पहली बार?</span><br />
+                      डेमो पासवर्ड: <code className="bg-blue-100 px-2 py-1 rounded font-mono font-bold">1234</code>
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-semibold">💡 पंजीकृत उपयोगकर्ता?</span><br />
+                      अपना पासवर्ड दर्ज करें या नया खाता बनाने के लिए "नया खाता बनाएं" पर क्लिक करें
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -189,12 +218,18 @@ export function LoginPage() {
             </div>
 
             <div className="mt-6 text-center">
-              <p className="text-sm text-ngo-gray-600">
-                नया उपयोगकर्ता हैं?{' '}
-                <Link to={ROUTES.REGISTER} className="font-semibold text-soft-blue-600 hover:text-soft-blue-700 underline">
-                  रजिस्टर करें
-                </Link>
-              </p>
+              {!hasRegisteredUsers ? (
+                <p className="text-sm text-ngo-gray-600">
+                  नया उपयोगकर्ता हैं?{' '}
+                  <Link to={ROUTES.REGISTER} className="font-semibold text-soft-blue-600 hover:text-soft-blue-700 underline">
+                    रजिस्टर करें
+                  </Link>
+                </p>
+              ) : (
+                <p className="text-sm text-ngo-gray-500">
+                  पहले से पंजीकृत हैं? अपना मोबाइल और पासवर्ड दर्ज करें
+                </p>
+              )}
             </div>
           </div>
 

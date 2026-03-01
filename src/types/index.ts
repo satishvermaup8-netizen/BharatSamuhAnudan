@@ -3,13 +3,29 @@ export interface User {
   name: string;
   email: string;
   mobile: string;
+  username?: string;
   role: 'member' | 'group_admin' | 'super_admin' | 'finance_admin' | 'support_admin';
-  kycStatus: 'pending' | 'verified' | 'rejected';
+  kycStatus: 'pending' | 'verified' | 'rejected' | 'under_review';
+  status: 'active' | 'inactive' | 'suspended' | 'pending_verification';
   profilePhoto?: string;
   createdAt: string;
+  updatedAt?: string;
   aadhaarNumber?: string;
   panNumber?: string;
   bankAccount?: BankAccount;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  lastLoginAt?: string;
+  kycDocuments?: KYCDocument[];
+}
+
+export interface KYCDocument {
+  id: string;
+  type: string;
+  url: string;
+  uploadedAt: string;
 }
 
 export interface BankAccount {
