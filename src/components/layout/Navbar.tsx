@@ -81,21 +81,35 @@ export function Navbar() {
             ))}
             
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                {/* User Profile Badge */}
                 <Link
                   to={ROUTES.PROFILE}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                  className={`flex items-center space-x-3 px-5 py-2.5 rounded-xl transition-all duration-200 border-2 ${
                     isScrolled
-                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                      : 'bg-white/20 hover:bg-white/30 text-white'
+                      ? 'bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-200 text-blue-900'
+                      : 'bg-white/20 hover:bg-white/30 border-white/30 text-white backdrop-blur-sm'
                   }`}
                 >
-                  <User className="w-4 h-4" />
-                  <span className="font-medium">{user?.name.split(' ')[0]}</span>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                    isScrolled ? 'bg-blue-600' : 'bg-white/30'
+                  }`}>
+                    <User className={`w-5 h-5 ${isScrolled ? 'text-white' : 'text-white'}`} />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="text-xs opacity-80">लॉगिन है ✓</span>
+                    <span className="font-semibold text-sm">{user?.name.split(' ')[0]}</span>
+                  </div>
                 </Link>
+                
+                {/* Logout Button */}
                 <button
                   onClick={logout}
-                  className="p-2 rounded-lg transition-all duration-200 hover:bg-red-50 text-red-600"
+                  className={`p-3 rounded-xl transition-all duration-200 border-2 ${
+                    isScrolled
+                      ? 'bg-red-50 hover:bg-red-100 border-red-200 text-red-600'
+                      : 'bg-white/10 hover:bg-white/20 border-white/20 text-white'
+                  }`}
                   title="Logout"
                 >
                   <LogOut className="w-5 h-5" />
@@ -154,14 +168,25 @@ export function Navbar() {
             
             {isAuthenticated ? (
               <>
+                <div className="px-4 py-3 bg-green-50 border-b-2 border-green-200">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <p className="text-xs text-green-700 font-semibold">✓ लॉगिन सफल</p>
+                  </div>
+                </div>
                 <Link
                   to={ROUTES.PROFILE}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                  className="block px-4 py-3 bg-blue-50 hover:bg-blue-100 border-b"
                 >
-                  <div className="flex items-center space-x-2">
-                    <User className="w-4 h-4" />
-                    <span>{user?.name}</span>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-500">प्रोफाइल</p>
+                      <p className="font-semibold text-gray-900">{user?.name}</p>
+                    </div>
                   </div>
                 </Link>
                 <button
@@ -179,19 +204,22 @@ export function Navbar() {
               </>
             ) : (
               <>
+                <div className="px-4 py-3 bg-blue-50 border-b-2 border-blue-200">
+                  <p className="text-xs text-blue-600 font-medium">लॉगिन नहीं है</p>
+                </div>
                 <Link
                   to={ROUTES.LOGIN}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-gray-700 hover:bg-gray-50"
+                  className="block px-4 py-3 text-gray-700 hover:bg-gray-50 font-medium"
                 >
-                  लॉगिन
+                  🔐 लॉगिन करें
                 </Link>
                 <Link
                   to={ROUTES.REGISTER}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-3 text-saffron hover:bg-orange-50 font-semibold"
+                  className="block px-4 py-3 text-white bg-saffron hover:bg-saffron-dark font-semibold"
                 >
-                  रजिस्टर करें
+                  ✨ नया खाता बनाएं
                 </Link>
               </>
             )}

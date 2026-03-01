@@ -76,10 +76,10 @@ export function RegisterPage() {
         password: formData.password,
       });
       console.log('✅ Signup successful!');
-      setSuccess('✓ रजिस्ट्रेशन सफल! डैशबोर्ड पर जा रहे हैं...');
+      setSuccess('🎉 रजिस्ट्रेशन सफल! आपका खाता बन गया है।');
       setTimeout(() => {
         navigate(ROUTES.DASHBOARD);
-      }, 500);
+      }, 2000);
     } catch (error: any) {
       console.error('❌ Signup error:', error.message);
       setError(error.message || 'रजिस्ट्रेशन विफल। क्षमा करें, कृपया पुनः प्रयास करें।');
@@ -114,9 +114,20 @@ export function RegisterPage() {
 
           {/* Success Alert */}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-green-700">{success}</p>
+            <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-400 rounded-xl shadow-lg">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center animate-bounce">
+                  <CheckCircle className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg font-bold text-green-800">{success}</p>
+                  <p className="text-sm text-green-600 mt-1">डैशबोर्ड पर रीडायरेक्ट हो रहा है...</p>
+                  <div className="mt-2 flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-700 font-medium">आप अब लॉगिन हैं ✓</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
