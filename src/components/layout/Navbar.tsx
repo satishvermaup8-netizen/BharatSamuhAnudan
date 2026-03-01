@@ -19,12 +19,18 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navLinks = [
-    { name: 'होम', path: ROUTES.HOME },
-    { name: 'समूह', path: ROUTES.GROUPS },
-    { name: 'डैशबोर्ड', path: ROUTES.DASHBOARD },
-    { name: 'मेरे समूह', path: ROUTES.MY_GROUPS },
-  ];
+  // Navigation links based on authentication status
+  const navLinks = isAuthenticated
+    ? [
+        { name: 'होम', path: ROUTES.HOME },
+        { name: 'समूह', path: ROUTES.GROUPS },
+        { name: 'डैशबोर्ड', path: ROUTES.DASHBOARD },
+        { name: 'मेरे समूह', path: ROUTES.MY_GROUPS },
+      ]
+    : [
+        { name: 'होम', path: ROUTES.HOME },
+        { name: 'समूह', path: ROUTES.GROUPS },
+      ];
 
   return (
     <nav

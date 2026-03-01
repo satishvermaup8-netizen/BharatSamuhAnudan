@@ -5,6 +5,8 @@ import { useScrollToTop } from '@/hooks/useScrollToTop';
 import { GroupCard } from '@/components/features/GroupCard';
 import { JoinGroupModal } from '@/components/group';
 import { mockGroups } from '@/lib/mockData';
+import { createGroup } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 import { ROUTES, MAX_GROUP_MEMBERS } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +17,7 @@ export function GroupsPage() {
   useScrollToTop();
   
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -23,9 +26,15 @@ export function GroupsPage() {
   // Create Group Modal States
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [groupLocation, setGroupLocation] = useState('');
+  const [groupCity, setGroupCity] = useState('');
+  const [groupState, setGroupState] = useState('');
   const [mobileInput, setMobileInput] = useState('');
   const [invitedMobiles, setInvitedMobiles] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
+  const [createdGroupId, setCreatedGroupId] = useState<string | null>(null);
+  const [createdGroupCode, setCreatedGroupCode] = useState<string | null>(null);
 
   // Ensure mockGroups is loaded and valid
   console.log('📊 Groups Page - Total groups loaded:', mockGroups?.length || 0);
@@ -87,14 +96,16 @@ export function GroupsPage() {
               </select>
             </div>
 
-            {/* Create Group Button */}
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="btn-primary flex items-center justify-center space-x-2 whitespace-nowrap"
-            >
-              <Plus className="w-5 h-5" />
-              <span>नया समूह बनाएं</span>
-            </button>
+            {/* Create Group Button - Only show if authenticated */}
+            {isAuthenticated && (
+              <button 
+                onClick={() => setShowCreateModal(true)}
+                className="btn-primary flex items-center justify-center space-x-2 whitespace-nowrap"
+              >
+                <Plus className="w-5 h-5" />
+                <span>नया समूह बनाएं</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -207,23 +218,47 @@ export function GroupsPage() {
                   />
                 </div>
 
-                {/* Live Preview Card */}
-                {groupName && (
-                  <div className="bg-gradient-to-br from-trust-light to-trust rounded-xl p-4 text-white shadow-md">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                        <Users className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold">{groupName}</h3>
-                        <p className="text-sm text-white/80">नया समूह</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-sm text-white/80 pt-3 border-t border-white/20">
-                      <span>सदस्य: {invitedMobiles.length + 1} (आप + {invitedMobiles.length} आमंत्रित)</span>
-                    </div>
+                {/* Description Input */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                    विवरण
+                  </Label>
+                  <textarea
+                    value={groupDescription}
+                    onChange={(e) => setGroupDescription(e.target.value)}
+                    placeholder="समूह के उद्देश्य या लक्ष्यों का वर्णन करें।"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-trust"
+                    rows={3}
+                  />
+                </div>
+
+                {/* Location Inputs */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      शहर *
+                    </Label>
+                    <Input
+                      value={groupCity}
+                      onChange={(e) => setGroupCity(e.target.value)}
+                      placeholder="उदाहरण: मुंबई"
+                      className="w-full"
+                    />
                   </div>
-                )}
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                      राज्य *
+                    </Label>
+                    <Input
+                      value={groupState}
+                      onChange={(e) => setGroupState(e.target.value)}
+                      placeholder="उदाहरण: महाराष्ट्र"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+
 
                 {/* Mobile Invitation Section */}
                 <div>
@@ -303,27 +338,52 @@ export function GroupsPage() {
                 </Button>
                 <Button
                   onClick={async () => {
-                    if (!groupName.trim()) return;
+                    if (!groupName.trim() || !groupCity.trim() || !groupState.trim()) {
+                      alert('कृपया सभी आवश्यक फील्ड भरें');
+                      return;
+                    }
                     
                     setCreating(true);
                     try {
-                      // Simulate API call
-                      await new Promise(resolve => setTimeout(resolve, 1500));
+                      const location = `${groupCity}, ${groupState}`;
+                      const groupData = {
+                        name: groupName.trim(),
+                        description: groupDescription.trim() || '',
+                        location: location,
+                        city: groupCity.trim(),
+                        state: groupState.trim(),
+                      };
                       
-                      // Close modal and refresh
+                      const newGroup = await createGroup(groupData);
+                      
+                      // Store created group info
+                      setCreatedGroupId(newGroup.id);
+                      setCreatedGroupCode(newGroup.group_code);
+                      
+                      // Close create modal
                       setShowCreateModal(false);
+                      
+                      // Show success message
+                      alert(`समूह "${groupName}" सफलतापूर्वक बनाया गया!\nकोड: ${newGroup.group_code}`);
+                      
+                      // Reset form
                       setGroupName('');
+                      setGroupDescription('');
+                      setGroupLocation('');
+                      setGroupCity('');
+                      setGroupState('');
                       setInvitedMobiles([]);
                       
-                      // Show success or redirect
-                      alert(`समूह "${groupName}" सफलतापूर्वक बनाया गया!`);
-                    } catch (error) {
+                      // Optionally navigate to the new group
+                      navigate(ROUTES.MY_GROUPS);
+                    } catch (error: any) {
                       console.error('Failed to create group:', error);
+                      alert(error.message || 'समूह बनाने में विफल');
                     } finally {
                       setCreating(false);
                     }
                   }}
-                  disabled={!groupName.trim() || creating}
+                  disabled={!groupName.trim() || !groupCity.trim() || !groupState.trim() || creating}
                   className="flex-1 bg-trust hover:bg-trust-dark"
                 >
                   {creating ? 'बनाया जा रहा है...' : 'समूह बनाएं'}
