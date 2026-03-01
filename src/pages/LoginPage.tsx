@@ -50,12 +50,12 @@ export function LoginPage() {
     try {
       await login(mobile, DEMO_PASSWORD);
       // Show success message before redirect
-      setSuccess('✓ लॉगिन सफल! होम पेज पर जा रहे हैं...');
+      setSuccess('🎉 लॉगिन सफल! आप अब लॉगिन हो गए हैं।');
       
-      // Wait 1 second so user can see the success message
+      // Wait 2 seconds so user can see the success message
       setTimeout(() => {
-        navigate(ROUTES.HOME);
-      }, 1200);
+        navigate(ROUTES.DASHBOARD);
+      }, 2000);
     } catch (error: any) {
       setError(error.message || 'लॉगिन विफल। क्षमा करें, कृपया पुनः प्रयास करें।');
       setLoading(false);
@@ -89,11 +89,19 @@ export function LoginPage() {
 
           {/* Success Alert */}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border-2 border-green-400 rounded-lg flex items-center space-x-3 animate-pulse">
-              <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-base font-semibold text-green-700">{success}</p>
-                <p className="text-xs text-green-600 mt-1">रीडायरेक्ट हो रहा है...</p>
+            <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-400 rounded-xl shadow-lg">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center animate-bounce">
+                  <CheckCircle className="w-7 h-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-lg font-bold text-green-800">{success}</p>
+                  <p className="text-sm text-green-600 mt-1">डैशबोर्ड पर रीडायरेक्ट हो रहा है...</p>
+                  <div className="mt-2 flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-700 font-medium">आप अब लॉगिन हैं ✓</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
